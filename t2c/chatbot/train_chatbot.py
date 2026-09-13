@@ -1,4 +1,5 @@
 import json
+import os
 import joblib
 import nltk
 from nltk.stem import PorterStemmer
@@ -7,6 +8,8 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 
 nltk.download('punkt')
+
+BASE_DIR = os.path.dirname(__file__)
 
 # Preprocessing
 stemmer = PorterStemmer()
@@ -18,7 +21,7 @@ def stem_words(words):
     return [stemmer.stem(w) for w in words]
 
 # Load intents
-with open("data/intents.json") as file:
+with open(os.path.join(BASE_DIR, "data", "intents.json")) as file:
     data = json.load(file)
 
 X = []
@@ -43,5 +46,6 @@ model = Pipeline([
 model.fit(X, y)
 
 # Save model
-joblib.dump(model, "data/chat_model.pkl")
-print("✅ Model trained and saved as chat_model.pkl")
+model_path = os.path.join(BASE_DIR, "data", "chat_model.pkl")
+joblib.dump(model, model_path)
+print(f"Model trained and saved to {model_path}")

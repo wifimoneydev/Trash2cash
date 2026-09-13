@@ -12,15 +12,48 @@ RATES = {
 }
 
 
+def normalize_material(material):
+    """Map a user-supplied material string to its canonical RATES key.
+
+    Accepts the HTML form's short values ("plastic", "nylon", "aluminum"),
+    the full canonical names, in any case, with surrounding whitespace.
+    Returns None if the material isn't recognized — this is the single
+    place both the reward calculator and the chatbot rely on, so they
+    can never disagree about what counts as a valid material.
+    """
+    if not isinstance(material, str):
+        return None
+    material_lower = material.strip().lower()
+    if not material_lower:
+        return None
+    for key in RATES:
+        if material_lower in key.lower():
+            return key
+    return None
+
+
 def get_rate_range(material):
-    """Return the (min, max) rate range in Naira/kg for a given material."""
-    return RATES.get(material, (0, 0))
+    """Return the (min, max) rate range in Naira/kg for a given material,
+    or (0, 0) if the material isn't recognized."""
+    key = normalize_material(material)
+    return RATES.get(key, (0, 0))
 
 
 def calculate_reward(material, weight):
-    """Calculate reward based on material and weight."""
-    material_lower = material.lower()
-    for key, (min_rate, max_rate) in RATES.items():
-        if material_lower in key.lower():
-            return (min_rate + max_rate) / 2 * float(weight)
-    return 0
+    """Calculate reward based on material and weight.
+
+    Fails cleanly rather than raising: an unrecognized material, a
+    non-numeric weight, or a non-positive weight all yield a reward of
+    0 instead of an exception or a nonsensical negative reward.
+    """
+    key = normalize_material(material)
+    if key is None:
+        return 0
+    try:
+        weight = float(weight)
+    except (TypeError, ValueError):
+        return 0
+    if weight <= 0:
+        return 0
+    min_rate, max_rate = RATES[key]
+    return (min_rate + max_rate) / 2 * weight

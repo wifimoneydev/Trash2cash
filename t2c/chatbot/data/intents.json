@@ -1,48 +1,71 @@
 {
-    
   "intents": [
-      {
-        "tag": "greeting",
-        "patterns": ["Hi", "Hello", "Hey", "Is anyone there?", "Good day"],
-        "responses": ["Hello! How can I assist you with Trash2Cash?"]
-      },
-      {
-        "tag": "how_it_works",
-        "patterns": ["How does Trash2Cash work?", "What do you do?", "Explain your service"],
-        "responses": [
-          "Trash2Cash lets you trade recyclable plastic waste like PET, HDPE, and LDPE for cash. Sort your plastics, drop them off, or schedule a pickup, and earn money based on the weight and type."
-        ]
-      },
-      
-      {
-        "tag": "payout_rates",
-        "patterns": ["How much do you pay for plastic?", "What are the rates?", "How much for metal?"],
-        "responses": ["Our rates vary by material and weight. Ask me for the current rates and I'll pull the real numbers."]
-      },
-      {
-        "tag": "pickup",
-        "patterns": ["Can you pick up from my house?", "Do you do pickups?", "Schedule a pickup"],
-        "responses": ["Yes! We offer pickups for sorted waste over 10kg. You can request a pickup through your account dashboard."]
-      },
-      {
-        "tag": "dropoff",
-        "patterns": ["Where can I drop off trash?", "Nearest collection point?", "Dropoff location"],
-        "responses": ["You can drop off recyclables at any of our listed collection points. Visit trash2cash.org/locations for a map."]
-      },
-      {
-        "tag": "goodbye",
-        "patterns": ["Bye", "Goodbye", "See you later", "exit"],
-        "responses": ["Goodbye! Thanks for helping the planet with Trash2Cash."]
-      },
-{
-    "tag": "plastic_types",
-    "patterns": ["What types of plastic do you accept?", "Do you take PET plastic?", "Can I recycle HDPE?"],
-    "responses": [
-      "We accept several types of plastic, including PET (Type 1), HDPE (Type 2), and LDPE (Type 4). Please clean and sort them before dropoff or pickup."
-    ]
+    {
+      "tag": "greeting",
+      "patterns": [
+        "Hi", "Hello", "Hey", "Is anyone there?", "Good day",
+        "Good afternoon", "Good evening", "How far", "Yo", "What's up"
+      ],
+      "responses": ["Hello! How can I assist you with Trash2Cash?"]
+    },
+    {
+      "tag": "how_it_works",
+      "patterns": [
+        "How does Trash2Cash work?", "What do you do?", "Explain your service",
+        "Give me a quick rundown", "How is this supposed to work",
+        "What's the process", "Break it down for me", "So how does it work exactly"
+      ],
+      "responses": [
+        "Trash2Cash lets you trade recyclable plastic waste like PET, HDPE, and LDPE for cash. Sort your plastics, drop them off, or schedule a pickup, and earn money based on the weight and type."
+      ]
+    },
+    {
+      "tag": "payout_rates",
+      "patterns": [
+        "How much do you pay for plastic?", "What are the rates?", "How much for metal?",
+        "What is the current price for cans", "How much do I earn per kilo",
+        "Price for nylon sachets", "What's the going rate", "Naira per kg for plastic"
+      ],
+      "responses": ["Our rates vary by material and weight. Ask me for the current rates and I'll pull the real numbers."]
+    },
+    {
+      "tag": "pickup",
+      "patterns": [
+        "Can you pick up from my house?", "Do you do pickups?", "Schedule a pickup",
+        "Will someone come to my address", "Home collection available?",
+        "Can you send a van to collect", "I want my waste collected",
+        "Do you offer home collection service"
+      ],
+      "responses": ["Yes! We offer pickups for sorted waste over 10kg. You can request a pickup through your account dashboard."]
+    },
+    {
+      "tag": "dropoff",
+      "patterns": [
+        "Where can I drop off trash?", "Nearest collection point?", "Dropoff location",
+        "Where's your collection center", "Any drop off spot near Yaba",
+        "Where do I bring my recyclables", "Show me a collection point",
+        "Where can I take my sorted trash"
+      ],
+      "responses": ["You can drop off recyclables at any of our listed collection points. Visit trash2cash.org/locations for a map."]
+    },
+    {
+      "tag": "goodbye",
+      "patterns": [
+        "Bye", "Goodbye", "See you later", "exit",
+        "Alright, bye for now", "I'm done, thanks", "See ya", "Talk later", "That's all, goodbye"
+      ],
+      "responses": ["Goodbye! Thanks for helping the planet with Trash2Cash."]
+    },
+    {
+      "tag": "plastic_types",
+      "patterns": [
+        "What types of plastic do you accept?", "Do you take PET plastic?", "Can I recycle HDPE?",
+        "Do you accept PP containers", "What kind of plastic is allowed",
+        "Can I bring aluminum cans too", "Is styrofoam accepted", "Which types of waste can I bring"
+      ],
+      "responses": [
+        "We accept several types of plastic, including PET (Type 1), HDPE (Type 2), and LDPE (Type 4). Please clean and sort them before dropoff or pickup."
+      ]
     }
-] 
+  ]
 }
-
-  
-  

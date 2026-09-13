@@ -1,0 +1,65 @@
+{
+  "cases": [
+    {"text": "hello there", "expected": "greeting", "category": "paraphrase"},
+    {"text": "good morning", "expected": "greeting", "category": "paraphrase"},
+    {"text": "morning", "expected": "greeting", "category": "short"},
+    {"text": "hy", "expected": "greeting", "category": "spelling"},
+    {"text": "wetin dey happen", "expected": "greeting", "category": "nigerian_english"},
+
+    {"text": "how does this thing work", "expected": "how_it_works", "category": "paraphrase"},
+    {"text": "explain how trash2cash works", "expected": "how_it_works", "category": "paraphrase"},
+    {"text": "wat is trash2cash", "expected": "how_it_works", "category": "spelling"},
+    {"text": "tell me about your service", "expected": "how_it_works", "category": "paraphrase"},
+    {"text": "abeg how does una service work", "expected": "how_it_works", "category": "nigerian_english"},
+
+    {"text": "how much will I get for plastic", "expected": "payout_rates", "category": "paraphrase"},
+    {"text": "wetin be the rate for aluminum", "expected": "payout_rates", "category": "nigerian_english"},
+    {"text": "how much money for nylon", "expected": "payout_rates", "category": "paraphrase"},
+    {"text": "whats the price per kg", "expected": "payout_rates", "category": "spelling"},
+    {"text": "how much for 5kg of cans", "expected": "payout_rates", "category": "paraphrase"},
+    {"text": "rate for pet bottles", "expected": "payout_rates", "category": "short"},
+    {"text": "rates?", "expected": "payout_rates", "category": "short"},
+
+    {"text": "can I get someone to come collect my trash", "expected": "pickup", "category": "paraphrase"},
+    {"text": "do u do house pickup", "expected": "pickup", "category": "spelling"},
+    {"text": "i need a pickup", "expected": "pickup", "category": "short"},
+    {"text": "can una come carry my waste", "expected": "pickup", "category": "nigerian_english"},
+    {"text": "schedule a collection", "expected": "pickup", "category": "paraphrase"},
+    {"text": "pickup?", "expected": "pickup", "category": "short"},
+
+    {"text": "where is the nearest dropoff", "expected": "dropoff", "category": "paraphrase"},
+    {"text": "wia I fit drop my trash", "expected": "dropoff", "category": "nigerian_english"},
+    {"text": "closest collection point to me", "expected": "dropoff", "category": "paraphrase"},
+    {"text": "location to drop plastic", "expected": "dropoff", "category": "paraphrase"},
+    {"text": "where do I take my recyclables", "expected": "dropoff", "category": "paraphrase"},
+    {"text": "drop off point in lekki", "expected": "dropoff", "category": "location"},
+
+    {"text": "ok bye", "expected": "goodbye", "category": "paraphrase"},
+    {"text": "thank you goodbye", "expected": "goodbye", "category": "paraphrase"},
+    {"text": "gotta go", "expected": "goodbye", "category": "short"},
+    {"text": "cya", "expected": "goodbye", "category": "spelling"},
+
+    {"text": "do you accept HDPE", "expected": "plastic_types", "category": "material"},
+    {"text": "what plastics can I bring", "expected": "plastic_types", "category": "material"},
+    {"text": "is pvc accepted", "expected": "plastic_types", "category": "material"},
+    {"text": "which materials do you take", "expected": "plastic_types", "category": "material"},
+    {"text": "can I bring pure water sachets", "expected": "plastic_types", "category": "nigerian_english"},
+
+    {"text": "what do you accept", "expected": "plastic_types", "category": "ambiguous"},
+    {"text": "where can I get money for my trash", "expected": "payout_rates", "category": "ambiguous"},
+
+    {"text": "what's the weather like today", "expected": "OOD", "category": "out_of_domain"},
+    {"text": "tell me a joke", "expected": "OOD", "category": "out_of_domain"},
+    {"text": "who is the president of nigeria", "expected": "OOD", "category": "out_of_domain"},
+    {"text": "can you help me with my homework", "expected": "OOD", "category": "out_of_domain"},
+    {"text": "what's your favorite food", "expected": "OOD", "category": "out_of_domain"},
+    {"text": "how do I bake a cake", "expected": "OOD", "category": "out_of_domain"},
+    {"text": "asdkjfh random gibberish", "expected": "OOD", "category": "out_of_domain"},
+    {"text": "what time is it", "expected": "OOD", "category": "out_of_domain"},
+    {"text": "do you have a girlfriend", "expected": "OOD", "category": "out_of_domain"},
+    {"text": "sing me a song", "expected": "OOD", "category": "out_of_domain"},
+    {"text": "what is 2 plus 2", "expected": "OOD", "category": "out_of_domain"},
+    {"text": "how far, wetin dey sup with the traffic today", "expected": "OOD", "category": "out_of_domain"},
+    {"text": "can you recommend a good movie", "expected": "OOD", "category": "out_of_domain"}
+  ]
+}
