@@ -4,6 +4,11 @@ nltk
 scikit-learn
 joblib
 
+# OpenAI-powered assistant (optional at runtime — app falls back to the
+# local chatbot above if no key is configured)
+openai
+python-dotenv
+
 # T2CVision (training + inference)
 tensorflow
 numpy

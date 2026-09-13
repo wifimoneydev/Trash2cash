@@ -306,6 +306,236 @@ with a single `pytest`.
 
 ---
 
+## Phase 3: OpenAI-Powered T2C Assistant — Completed
+
+### Architecture
+
+`/chat` now calls `t2c.assistant.assistant.get_assistant_response(message, session=session)`
+instead of the local chatbot directly. New package, `t2c/assistant/`:
+
+- **`client.py`** — builds an `openai.OpenAI` client from `OPENAI_API_KEY`
+  (loaded from the environment, or a local `.env` via `python-dotenv` if
+  present). Returns `None` — not an error — when no key is configured or
+  the `openai` package isn't installed. `.env.example` documents the two
+  optional variables (`OPENAI_API_KEY`, `OPENAI_MODEL`, default
+  `gpt-4o-mini`). `.env` itself is gitignored and was never committed.
+- **`schema.py`** — the structured intent schema
+  (`intent`/`material`/`weight_kg`/`location`/`question`) and
+  `parse_intent()`, which validates every field and raises
+  `IntentParseError` on anything malformed — untrusted model output is
+  never passed straight to a business-logic function.
+- **`tools.py`** — `reward_tool`, `location_tool`, `material_info_tool`,
+  `faq_tool`, `unsupported_tool`. Every one of these calls into
+  `t2c.rewards` / `t2c.locations` / the local chatbot's own FAQ text —
+  never OpenAI — and returns a `fact` string that is the *only* content
+  the model is allowed to restate.
+- **`assistant.py`** — orchestrates: extract intent (OpenAI, JSON mode) →
+  resolve session context → run the matching tool → phrase the tool's
+  `fact` naturally (a second OpenAI call, constrained — see grounding
+  below) → remember state for follow-ups. Any exception anywhere in that
+  chain (missing key, auth failure, timeout, rate limit, malformed JSON)
+  is caught and the function falls back to the existing
+  `t2c.chatbot.chatbot.get_bot_response()` instead. `get_assistant_response()`
+  never raises.
+
+The local Naive Bayes chatbot from Phase 2 is completely unmodified and
+remains the fallback path — its own evaluation numbers (69.8% overall,
+38.5% OOD recall) are unchanged, reconfirmed by re-running
+`t2c/chatbot/evaluate.py` this phase.
+
+### How business data is grounded
+
+Numbers are never computed by the LLM. The flow is: OpenAI extracts
+*what the user is asking* (intent + arguments) → Python code
+(`t2c.rewards`/`t2c.locations`) computes or looks up the *actual answer*
+→ OpenAI is shown only that pre-computed fact and asked to phrase it
+naturally. Two concrete guards enforce this:
+
+1. **The phrasing prompt is explicit and directive**: it was tuned
+   live after an early version made the model *hedge* on numbers it
+   should have stated plainly (asked "what are the rates?", it initially
+   replied "I can't provide the current rates" instead of restating the
+   verified fact it was given — a real bug caught by `test_app.py`'s
+   existing regression test, not a hypothetical). The fixed prompt tells
+   the model the fact is already-verified and authoritative, and to
+   restate every number in it exactly.
+2. **A numeric safety net** (`_contains_only_known_numbers`): after the
+   phrasing call, every number in the delivered text must already appear
+   in the verified fact string, or the phrasing is discarded and the
+   exact deterministic fact text is sent instead. Verified in
+   `test_assistant.py::test_phrasing_cannot_inject_a_fabricated_number`
+   with a mock that tries to inject a fake street address's number.
+   **Known limitation, stated plainly**: this guard catches numeric
+   hallucination only. A non-numeric fabrication (an invented street
+   name with no digits, e.g.) would not be caught by this specific
+   check — the phrasing prompt's instruction not to add unlisted facts
+   is the only defense there. Not solved in this phase.
+
+Unsupported materials, locations with no verified address, and
+out-of-scope questions are all handled the same way: the *fact* itself
+already states the honest limitation ("not currently listed", "we don't
+have a verified street address"), so there's nothing for the phrasing
+step to embellish.
+
+### Session conversation context (Task 9)
+
+Flask's built-in signed-cookie `session` (no database) stores the last
+resolved material/location and a short (3-turn) history. If OpenAI's
+extraction leaves `material`/`location` null on a follow-up (e.g. "what
+about 10kg?"), `_resolve_with_session_fallback()` deterministically
+fills it in from the session — this is plain Python, not a second
+guess by the LLM. If there's nothing to resolve against, the tool falls
+back safely (verified live: a bare "What about 10kg?" with an empty
+session returns the general rate table, not a wrong guess or a crash).
+Verified live end-to-end through the real Flask session cookie (not
+just mocked) — see Final Verification below.
+
+### Mode indicator (Task 10)
+
+Every `/chat` JSON response now includes `"mode": "openai"` or
+`"mode": "local_fallback"`. The existing frontend (`chatbot.js`) only
+reads `data.response` and ignores unknown keys, so this is invisible in
+the UI, exactly as required — no frontend changes were made.
+
+### Evaluation — OpenAI mode (Task 12, live, real key, not mocked)
+
+`t2c/assistant/data/eval_set.json` — **60 cases** across rewards,
+locations, materials (supported and unsupported), FAQs, Nigerian
+English, spelling errors, combined questions, 5 two-turn follow-up
+conversations, unsupported-feature questions, and out-of-domain
+questions. Run live with `python -m t2c.assistant.evaluate` (requires
+`OPENAI_API_KEY`; costs real API calls — this is not part of the
+regular `pytest` suite for that reason). Final results after fixing two
+real bugs the first live run exposed (below):
+
+| Metric | Result |
+|---|---|
+| Tool selection accuracy | **98.3%** (59/60) |
+| Argument extraction accuracy | **93.2%** (scored only when tool selection was correct) |
+| Grounded-answer accuracy | **98.3%** (59/60) |
+| Hallucination rate (raw model output, before the numeric safety net) | **3.3%** (2/60) |
+| Parse failures (malformed JSON, caught internally) | 0 |
+
+Per-category grounded accuracy: 100% on location, material (both
+supported and unsupported), FAQ, out-of-domain, unsupported-feature,
+spelling, combined, and both follow-up turns; 100% on reward (after
+fixes); 86% (6/7) on Nigerian English. The one remaining miss: "Abeg
+wetin una dey collect for cash?" was classified `general_help` instead
+of the expected `material_info` — a genuinely ambiguous Pidgin phrasing
+that could reasonably be read either way, not a clear-cut error.
+
+**Two real bugs this live evaluation caught and fixed** (not eval-script
+issues — actual behavior bugs), reported honestly:
+
+1. **`t2c.rewards.normalize_material()` failed on natural material
+   phrasing.** OpenAI often extracts arguments like "aluminum cans" or
+   "nylon sachets" (mirroring the user's words), which are not literal
+   substrings of the canonical keys `"Aluminum (Cans)"` /
+   `"Nylon (Pure water sachets)"` because of the parenthesis. Fixed by
+   adding a fallback match on the material's head name. This is used by
+   *both* the reward calculator and the assistant, so the fix benefits
+   the whole app, not just this new code.
+2. **`reward_tool` asked for weight instead of stating the rate** when a
+   user asked something like "What's aluminum worth?" (material known,
+   no weight given) — it replied "How many kilograms do you have?"
+   without ever stating the rate itself. Fixed to state the rate range
+   up front in that case.
+
+Both fixes are covered by the existing `test_rewards.py`/`test_assistant.py`
+suites (41 tests, still all passing) in addition to being what actually
+moved the live eval numbers.
+
+### Evaluation — local fallback mode (Task 12, kept separate, not mixed)
+
+Unchanged from Phase 2 (`t2c/chatbot/chatbot.py` was not touched this
+phase) — reconfirmed by re-running `t2c/chatbot/evaluate.py`: **69.8%
+overall accuracy, 38.5% OOD recall** at threshold 0.30. See the Phase 2
+section above for the full breakdown and the reasoning behind that
+threshold. These numbers are reported separately from the OpenAI-mode
+numbers above, per the instruction not to mix them — they measure two
+different code paths with very different capabilities.
+
+### Tests (Task 13)
+
+`test_assistant.py` — 13 tests, OpenAI fully mocked (no real key or
+network needed to run `pytest`): reward/location/material intents,
+unsupported-material rejection, invalid structured output → local
+fallback, OpenAI exception → local fallback, missing key → local
+fallback, reward values traced back to `t2c.rewards.calculate_reward`
+directly, a mocked fabricated-number injection caught by the safety
+net, a conversation follow-up reusing session state, mode indicator in
+both paths, and `parse_intent()`'s own input validation. `test_app.py`'s
+two pre-existing `/chat` tests were updated to force `local_fallback`
+mode via `monkeypatch` — they test the endpoint's plumbing and the
+local chatbot's grounding, not whether a real OpenAI key happens to be
+configured wherever the suite runs, so this keeps them deterministic
+and fast (no network) regardless of environment. **Full suite: 41
+passed** (28 from Phase 2 + 13 new), still `pytest` from the repo root,
+still no live network calls required.
+
+### Final Verification (live, real key from `.env`)
+
+All run directly against the live OpenAI API and the real Flask app,
+not simulated:
+
+- `pytest` → 41 passed (mocked, deterministic, no network).
+- `python app.py` / Flask startup → serves real HTTP 200s.
+- Live OpenAI reward query ("How much for 5kg of aluminum?") → `mode:
+  openai`, "₦1750.00" (matches `calculate_reward` exactly).
+- Live OpenAI location query ("Where can I recycle in Ikeja?") → `mode:
+  openai`, correctly names Ikeja/Lagos and explicitly states no verified
+  address/coordinates exist — no fabricated address.
+- Live OpenAI unsupported-material query ("Do you accept glass?") →
+  `mode: openai`, correctly declines and lists the real accepted
+  materials.
+- Live Nigerian-English query ("Abeg how much 5kg aluminium go give
+  me?") → `mode: openai`, correct ₦1750.00, natural tone.
+- Live conversation follow-up through the real Flask session cookie
+  ("How much for 5kg plastic?" → "What about 10kg?") → correctly reused
+  "plastic" for the second turn, ₦900.00.
+- Local fallback with no key (`OPENAI_API_KEY` unset) → `mode:
+  local_fallback`, still correct grounded rates, no crash.
+- Invalid API key (garbage string) → caught, falls back to `mode:
+  local_fallback` cleanly, no raw error surfaced.
+
+### Remaining limitations (honest, not fixed in this phase)
+
+- The numeric safety net (see "How business data is grounded" above)
+  doesn't catch non-numeric hallucination (an invented place name or
+  policy with no digits in it). Residual risk, not eliminated.
+- One genuinely ambiguous Nigerian-English phrasing was misclassified
+  in the eval set; broader Pidgin/slang coverage is untested beyond the
+  cases here.
+- Each assistant turn extracts and acts on exactly one intent. A
+  question combining two distinct asks (e.g. "what's the rate for
+  nylon *and* where's your nearest Lagos location?") is answered for
+  the primary intent only — the eval set's "combined" category checks
+  the primary answer's correctness, not full multi-part coverage. Full
+  multi-tool-call handling would be a larger architecture change than
+  this phase's scope.
+- Two live OpenAI calls per turn (extract, then phrase) means real
+  latency and real API cost per message — not evaluated here, since
+  Task list didn't ask for a latency/cost budget, but worth knowing
+  before considering heavier usage.
+- `OPENAI_MODEL` defaults to `gpt-4o-mini`; the evaluation numbers above
+  are specific to that model and would need re-running if the default
+  changes.
+
+### Recommended next phase
+
+**Phase 4 candidates, in order:**
+1. Revisit the single-intent-per-turn limitation if combined questions
+   turn out to matter in practice (would need real OpenAI function
+   calling with multiple tool invocations per turn — a real architecture
+   change, not a tweak).
+2. T2CVision: still not started — run `trainvision.py`, save a real
+   model, record honest metrics, then integrate as its own tool
+   (`vision_lookup` or similar) following the same
+   extract-intent-then-call-verified-code pattern used here.
+3. Persistence/accounts — still deliberately last.
+
+---
+
 ## Original Audit (Pre-Cleanup Baseline)
 
 *The sections below describe the repository as it existed before Phase 1. Kept for historical reference — several findings here (the nested duplication, committed venv, chatbot/reward contradiction, broken contact form, vision rescaling bug, duplicate chat widget) have since been fixed, as documented above.*

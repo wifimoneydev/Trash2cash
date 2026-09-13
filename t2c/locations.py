@@ -42,3 +42,28 @@ def list_location_records(state=None):
                 "status": "unverified",  # static placeholder area, not a confirmed outlet
             })
     return records
+
+
+def find_records(query):
+    """Look up location records by a free-text city or LGA name (e.g.
+    "Ikeja", "lagos", "ikeja "). Case-insensitive, whitespace-trimmed
+    exact match against known city/LGA names — no fuzzy guessing.
+
+    Returns a list of matching records (possibly empty). Matching a
+    city returns every LGA under it; matching an LGA returns just that
+    one record.
+    """
+    if not isinstance(query, str):
+        return []
+    query_norm = query.strip().lower()
+    if not query_norm:
+        return []
+
+    if any(query_norm == city.lower() for city in LOCATIONS):
+        city = next(c for c in LOCATIONS if c.lower() == query_norm)
+        return list_location_records(city)
+
+    return [
+        record for record in list_location_records()
+        if record["lga"].lower() == query_norm
+    ]

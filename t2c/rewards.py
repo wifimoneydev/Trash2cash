@@ -29,6 +29,16 @@ def normalize_material(material):
     for key in RATES:
         if material_lower in key.lower():
             return key
+    # Natural phrasing often names the material and a form/descriptor that
+    # isn't a literal substring of the canonical key, e.g. "aluminum cans"
+    # or "nylon sachets" vs. "Aluminum (Cans)" / "Nylon (Pure water
+    # sachets)" — the parenthesis breaks a plain substring match even
+    # though the material is unambiguous. Fall back to matching on the
+    # material's head name (the word(s) before the parenthetical detail).
+    for key in RATES:
+        head = key.split(" (")[0].lower()
+        if head in material_lower or material_lower in head:
+            return key
     return None
 
 

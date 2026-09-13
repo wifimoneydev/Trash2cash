@@ -1,8 +1,8 @@
-from flask import Flask, render_template, request, jsonify, flash, redirect
+from flask import Flask, render_template, request, jsonify, flash, redirect, session
 
 from t2c.rewards import RATES, get_rate_range, calculate_reward
 from t2c.locations import LOCATIONS, get_locations
-from t2c.chatbot.chatbot import get_bot_response
+from t2c.assistant.assistant import get_assistant_response
 
 app = Flask(__name__)
 app.secret_key = "dev"  # only needed for flash(); not a real secret, not for production
@@ -48,8 +48,8 @@ def about():
 def chat():
     data = request.get_json()
     message = data.get("message", "")
-    response = get_bot_response(message)
-    return jsonify({"response": response})
+    result = get_assistant_response(message, session=session)
+    return jsonify(result)
 
 @app.route("/contact", methods=["GET", "POST"])
 def contact():

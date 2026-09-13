@@ -1,0 +1,77 @@
+{
+  "cases": [
+    {"text": "How much for 3kg plastic?", "expected_intent": "reward_estimate", "expected_material": "Plastic (PET bottles)", "expected_weight_kg": 3, "expected_location": null, "category": "reward"},
+    {"text": "I have 7 kilos of nylon", "expected_intent": "reward_estimate", "expected_material": "Nylon (Pure water sachets)", "expected_weight_kg": 7, "expected_location": null, "category": "reward"},
+    {"text": "What's aluminum worth?", "expected_intent": "reward_estimate", "expected_material": "Aluminum (Cans)", "expected_weight_kg": null, "expected_location": null, "category": "reward"},
+    {"text": "Can I get money for 0kg plastic?", "expected_intent": "reward_estimate", "expected_material": "Plastic (PET bottles)", "expected_weight_kg": 0, "expected_location": null, "category": "reward"},
+    {"text": "How much would 12.5kg of aluminum cans earn me?", "expected_intent": "reward_estimate", "expected_material": "Aluminum (Cans)", "expected_weight_kg": 12.5, "expected_location": null, "category": "reward"},
+    {"text": "What do you pay per kg overall?", "expected_intent": "reward_estimate", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "reward"},
+    {"text": "If I bring 2kg of PET bottles how much cash do I get?", "expected_intent": "reward_estimate", "expected_material": "Plastic (PET bottles)", "expected_weight_kg": 2, "expected_location": null, "category": "reward"},
+    {"text": "Give me the price for nylon sachets", "expected_intent": "reward_estimate", "expected_material": "Nylon (Pure water sachets)", "expected_weight_kg": null, "expected_location": null, "category": "reward"},
+
+    {"text": "Where can I recycle in Ikeja?", "expected_intent": "location_lookup", "expected_material": null, "expected_weight_kg": null, "expected_location": "Ikeja", "category": "location"},
+    {"text": "Do you have a drop-off point in Wuse?", "expected_intent": "location_lookup", "expected_material": null, "expected_weight_kg": null, "expected_location": "Wuse", "category": "location"},
+    {"text": "What areas do you cover in Lagos?", "expected_intent": "location_lookup", "expected_material": null, "expected_weight_kg": null, "expected_location": "Lagos", "category": "location"},
+    {"text": "Is there a collection point near Maitama?", "expected_intent": "location_lookup", "expected_material": null, "expected_weight_kg": null, "expected_location": "Maitama", "category": "location"},
+    {"text": "Can I drop off in Kubwa?", "expected_intent": "location_lookup", "expected_material": null, "expected_weight_kg": null, "expected_location": "Kubwa", "category": "location"},
+    {"text": "Where's the outlet in Lekki?", "expected_intent": "location_lookup", "expected_material": null, "expected_weight_kg": null, "expected_location": "Lekki", "category": "location"},
+
+    {"text": "Do you accept glass?", "expected_intent": "material_info", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "material_unsupported"},
+    {"text": "Can I recycle e-waste with you?", "expected_intent": "material_info", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "material_unsupported"},
+    {"text": "Do you take HDPE containers?", "expected_intent": "material_info", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "material_unsupported"},
+    {"text": "Is aluminum foil accepted?", "expected_intent": "material_info", "expected_material": "Aluminum (Cans)", "expected_weight_kg": null, "expected_location": null, "category": "material_supported"},
+    {"text": "What materials do you take?", "expected_intent": "material_info", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "material_supported"},
+    {"text": "Is plastic on your accepted list?", "expected_intent": "material_info", "expected_material": "Plastic (PET bottles)", "expected_weight_kg": null, "expected_location": null, "category": "material_supported"},
+
+    {"text": "How does Trash2Cash work?", "expected_intent": "general_help", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "faq"},
+    {"text": "What is this app for?", "expected_intent": "general_help", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "faq"},
+    {"text": "Tell me about Trash2Cash", "expected_intent": "general_help", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "faq"},
+    {"text": "How do I get started?", "expected_intent": "general_help", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "faq"},
+
+    {"text": "Abeg how much 5kg aluminium go give me?", "expected_intent": "reward_estimate", "expected_material": "Aluminum (Cans)", "expected_weight_kg": 5, "expected_location": null, "category": "nigerian_english"},
+    {"text": "I get plenty pure water nylon, where I fit carry am go?", "expected_intent": "location_lookup", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "nigerian_english"},
+    {"text": "How much I fit make if na 8kg plastic?", "expected_intent": "reward_estimate", "expected_material": "Plastic (PET bottles)", "expected_weight_kg": 8, "expected_location": null, "category": "nigerian_english"},
+    {"text": "Which one dey pay pass?", "expected_intent": "reward_estimate", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "nigerian_english"},
+    {"text": "Can I recycle glass too?", "expected_intent": "material_info", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "nigerian_english"},
+    {"text": "Abeg wetin una dey collect for cash?", "expected_intent": "material_info", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "nigerian_english"},
+    {"text": "Oga where una dey based for Abuja?", "expected_intent": "location_lookup", "expected_material": null, "expected_weight_kg": null, "expected_location": "Abuja", "category": "nigerian_english"},
+
+    {"text": "hw much for plastik 4kg", "expected_intent": "reward_estimate", "expected_material": "Plastic (PET bottles)", "expected_weight_kg": 4, "expected_location": null, "category": "spelling"},
+    {"text": "wat do yuo accept", "expected_intent": "material_info", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "spelling"},
+    {"text": "aluminium rate pls", "expected_intent": "reward_estimate", "expected_material": "Aluminum (Cans)", "expected_weight_kg": null, "expected_location": null, "category": "spelling"},
+    {"text": "wher can i drop of in yaba", "expected_intent": "location_lookup", "expected_material": null, "expected_weight_kg": null, "expected_location": "Yaba", "category": "spelling"},
+    {"text": "nylom price per kg", "expected_intent": "reward_estimate", "expected_material": "Nylon (Pure water sachets)", "expected_weight_kg": null, "expected_location": null, "category": "spelling"},
+
+    {"text": "I have 6kg of plastic, how much do I get, and can I drop it off in Surulere?", "expected_intent": "reward_estimate", "expected_material": "Plastic (PET bottles)", "expected_weight_kg": 6, "expected_location": null, "category": "combined"},
+    {"text": "Do you accept aluminum and if so what's the rate?", "expected_intent": "reward_estimate", "expected_material": "Aluminum (Cans)", "expected_weight_kg": null, "expected_location": null, "category": "combined"},
+    {"text": "What's the rate for nylon and where's your nearest Lagos location?", "expected_intent": "reward_estimate", "expected_material": "Nylon (Pure water sachets)", "expected_weight_kg": null, "expected_location": null, "category": "combined"},
+    {"text": "Can I bring glass and also plastic bottles?", "expected_intent": "material_info", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "combined"},
+
+    {"text": "Do you offer a wallet system to store my earnings?", "expected_intent": "unsupported", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "unsupported_feature"},
+    {"text": "Can you schedule a pickup for tomorrow at 3pm?", "expected_intent": "unsupported", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "unsupported_feature"},
+    {"text": "What are your operating hours?", "expected_intent": "unsupported", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "unsupported_feature"},
+    {"text": "Can I create an account?", "expected_intent": "unsupported", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "unsupported_feature"},
+
+    {"text": "What's the weather like in Lagos today?", "expected_intent": "unsupported", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "out_of_domain"},
+    {"text": "Tell me a joke", "expected_intent": "unsupported", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "out_of_domain"},
+    {"text": "Who won the last football match?", "expected_intent": "unsupported", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "out_of_domain"},
+    {"text": "Can you help me write a resume?", "expected_intent": "unsupported", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "out_of_domain"},
+    {"text": "What's 15 times 4?", "expected_intent": "unsupported", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "out_of_domain"},
+    {"text": "Recommend a good Nigerian movie", "expected_intent": "unsupported", "expected_material": null, "expected_weight_kg": null, "expected_location": null, "category": "out_of_domain"},
+
+    {"text": "How much for 5kg plastic?", "expected_intent": "reward_estimate", "expected_material": "Plastic (PET bottles)", "expected_weight_kg": 5, "expected_location": null, "category": "followup_turn1", "session_id": "f1"},
+    {"text": "What about 10kg?", "expected_intent": "reward_estimate", "expected_material": "Plastic (PET bottles)", "expected_weight_kg": 10, "expected_location": null, "category": "followup_turn2", "session_id": "f1"},
+
+    {"text": "What's the rate for nylon?", "expected_intent": "reward_estimate", "expected_material": "Nylon (Pure water sachets)", "expected_weight_kg": null, "expected_location": null, "category": "followup_turn1", "session_id": "f2"},
+    {"text": "And for 3kg of it?", "expected_intent": "reward_estimate", "expected_material": "Nylon (Pure water sachets)", "expected_weight_kg": 3, "expected_location": null, "category": "followup_turn2", "session_id": "f2"},
+
+    {"text": "Any drop-off point in Garki?", "expected_intent": "location_lookup", "expected_material": null, "expected_weight_kg": null, "expected_location": "Garki", "category": "followup_turn1", "session_id": "f3"},
+    {"text": "What about somewhere else in Abuja?", "expected_intent": "location_lookup", "expected_material": null, "expected_weight_kg": null, "expected_location": "Abuja", "category": "followup_turn2", "session_id": "f3"},
+
+    {"text": "How much is aluminum per kg?", "expected_intent": "reward_estimate", "expected_material": "Aluminum (Cans)", "expected_weight_kg": null, "expected_location": null, "category": "followup_turn1", "session_id": "f4"},
+    {"text": "And if I have 20kg?", "expected_intent": "reward_estimate", "expected_material": "Aluminum (Cans)", "expected_weight_kg": 20, "expected_location": null, "category": "followup_turn2", "session_id": "f4"},
+
+    {"text": "Do you accept plastic?", "expected_intent": "material_info", "expected_material": "Plastic (PET bottles)", "expected_weight_kg": null, "expected_location": null, "category": "followup_turn1", "session_id": "f5"},
+    {"text": "How much does it pay?", "expected_intent": "reward_estimate", "expected_material": "Plastic (PET bottles)", "expected_weight_kg": null, "expected_location": null, "category": "followup_turn2", "session_id": "f5"}
+  ]
+}
