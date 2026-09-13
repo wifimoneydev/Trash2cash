@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% import "_icons.html" as icons %}
+
+{% block title %}Ask T2C — Trash2Cash Assistant{% endblock %}
+{% block description %}Ask the Trash2Cash assistant about rates, materials, or drop-off locations — grounded in real data, never invented.{% endblock %}
+
+{% block content %}
+
+<section class="section-dark">
+    <div class="container">
+        <p class="eyebrow">Ask T2C</p>
+        <h1>Your recycling questions, answered.</h1>
+        <p class="hero-lede">Ask about rates, materials, or drop-off locations in plain English (or Pidgin) &mdash; answers are grounded in Trash2Cash's real data, never invented.</p>
+    </div>
+</section>
+
+<section>
+    <div class="container">
+        <div class="chat-shell">
+            <div class="chat-head">
+                <div class="chat-head-title">{{ icons.chat(20) }} T2C Assistant</div>
+                <span class="chat-mode" id="chat-mode" hidden></span>
+            </div>
+
+            <div class="chat-log" id="chat-log" aria-live="polite" aria-relevant="additions">
+                <div class="chat-empty" id="chat-empty">
+                    {{ icons.sparkle(40) }}
+                    <p>Ask about a reward estimate, an accepted material, or a drop-off area to get started.</p>
+                </div>
+            </div>
+
+            <div class="chat-suggestions" id="chat-suggestions">
+                <button type="button" class="suggestion-chip">How much can I get for 5kg of aluminum?</button>
+                <button type="button" class="suggestion-chip">Where can I recycle in Ikeja?</button>
+                <button type="button" class="suggestion-chip">Do you accept glass?</button>
+                <button type="button" class="suggestion-chip">Which material pays the most?</button>
+            </div>
+
+            <form class="chat-input-row" id="chat-form">
+                <label for="chat-input" class="sr-only">Message T2C Assistant</label>
+                <textarea id="chat-input" name="message" rows="1" placeholder="Ask T2C anything about recycling with us…" required></textarea>
+                <button type="submit" class="chat-send" id="chat-send" aria-label="Send message">{{ icons.send() }}</button>
+            </form>
+        </div>
+        <p class="hint" style="margin-top:1rem;">Conversation stays in this browser session only &mdash; nothing is saved permanently.</p>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/assistant.js') }}"></script>
+{% endblock %}

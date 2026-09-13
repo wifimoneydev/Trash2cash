@@ -536,6 +536,203 @@ not simulated:
 
 ---
 
+## Phase 4: Product Integration + UI Redesign — Completed
+
+### UI audit (Task 1) findings, before any redesign
+
+- Single `static/css/styles.css` (dark neon-green theme, `#00ff88`),
+  with dead rules left over from the Phase 1 floating chat widget removal
+  (`#chat-toggle`/`#chatbox`/`#chat-log`/`#user-input` — nothing in any
+  template referenced them anymore).
+- Four templates, each with its own hand-copied `<nav>` markup that had
+  drifted out of sync: `index.html`'s nav had a bare `<a>` not wrapped
+  in `<li>` (invalid HTML); `contact.html` referenced classes
+  (`.navbar-container`, `.nav-links`, `.section`, `.section-content`,
+  `.contact-form`) that were never defined in the stylesheet at all;
+  `about.html` had no viewport meta tag.
+- `project.py`'s `/contact` route called `flash("Message sent
+  successfully!")`, but `contact.html` never rendered
+  `get_flashed_messages()` — the confirmation was silently discarded.
+  A real, if minor, bug fixed this phase.
+- `process.html` coupled the reward calculator and a decorative,
+  functionally-unused location dropdown into one form — reward
+  calculation never used location. Split into two dedicated,
+  independently-useful pages this phase.
+- `about.html` claimed "AI-powered drop-off containers and an automated
+  rewards system" in the present tense — the exact kind of overclaim
+  flagged in the Phase 1 audit. Rewritten to frame automation as future
+  vision, explicitly.
+
+### Information architecture (Task 2)
+
+Nav: Home · How It Works (anchor on Home) · Rewards · Drop-off Finder ·
+Ask T2C · About · Contact. "How It Works" is a same-page anchor rather
+than its own route since it's a short, purely explanatory section with
+nothing interactive; everything else got a dedicated page because each
+has its own real functionality (a form, a filter, a chat).
+
+### Visual system (Task 3)
+
+One rewritten `static/css/styles.css` (design tokens as CSS custom
+properties, then reset, layout, and components) — no CSS framework,
+no icon font (a small set of hand-drawn inline SVGs in
+`templates/_icons.html` instead). Palette: warm off-white paper with a
+near-black ink for dark/hero sections, a confident (not neon) emerald
+green as the primary brand color, and a warm amber/gold as a secondary
+"value" accent — deliberately avoiding the brief's "no green gradients,
+no generic bootstrap look, no random emoji" list. Typography: Sora
+(display/headings) + Inter (body), loaded from Google Fonts.
+
+**Contrast was checked, not assumed**: every text/background color pair
+was run through the actual WCAG relative-luminance formula (not
+eyeballed). Two real failures were caught and fixed before shipping:
+white button text on the base `--primary` green measured 3.43:1 (fails
+the 4.5:1 AA threshold for normal text) — buttons now use the darker
+`--primary-dark` as their resting background (6.06:1); badge text
+(`--accent-dark` on `--accent-tint`) measured 3.52:1 — darkened to
+5.12:1. `--muted` and `--danger` were also nudged for margin. All
+now verified ≥4.5:1 for text pairs.
+
+### Pages (Tasks 4, 5, 6, 7, 9, 10, 11)
+
+- **Home** (`index.html`): dark hero with the "Turn Waste Into Value"
+  headline, dual CTA (Calculate Reward / Ask T2C), a live rate preview
+  panel sourced from `t2c.rewards.RATES` (not hardcoded numbers), four
+  feature cards — Identify Waste is explicitly labeled "Coming soon"
+  and described as "AI waste identification... is in development
+  (T2CVision) — not available yet," never claimed as working. A 4-step
+  "How It Works" section follows, worded to not imply in-app payments
+  exist.
+- **Rewards** (`rewards.html`, renamed from `process.html`): material +
+  weight only (location removed — it was never used by the calculation).
+  Client-side validation is presentation-only (required fields, numeric
+  weight ≥0); the actual math is untouched, unchanged `t2c.rewards`
+  logic, called either via a plain form POST (no-JS fallback, fully
+  tested) or via `fetch()` to the new `POST /api/reward` endpoint for a
+  live, no-reload result. The result panel explicitly says "Based on a
+  fixed rate table — not a live market price."
+- **Drop-off Finder** (`locations.html`, new): city toggle buttons plus
+  a card grid of LGA names from `t2c.locations.list_location_records()`.
+  Every card states "Exact outlet address not yet available — this is a
+  static reference area," matching the honesty requirement exactly — no
+  invented addresses, coordinates, or opening hours. Backed by the new
+  `GET /api/locations?city=` endpoint for the same live-update pattern.
+- **Ask T2C** (`assistant.html`, new): a first-class chat page (not a
+  floating widget) — message bubbles, typing indicator, four suggested
+  prompts, Enter-to-send / Shift+Enter-for-newline, auto-resizing input,
+  disabled send button while waiting, and a subtle mode badge
+  ("OpenAI" / "Local fallback") sourced directly from the existing
+  `/chat` response's `mode` field. `static/js/assistant.js` only calls
+  `POST /chat` — no assistant logic duplicated in JavaScript.
+- **About**: rewritten to state the waste problem, the incentive idea,
+  the Lagos/Abuja starting scope, and the automation vision as
+  explicitly *future*, removing the "AI-powered... automated" present-tense
+  claim.
+- **Contact**: same print-only/no-storage behavior as before, but now
+  the success flash actually renders (it silently didn't before), and
+  says plainly that the form isn't yet connected to email or storage.
+
+### New API routes (Task 14) — all thin wrappers over existing shared modules
+
+- `POST /api/reward` — `{material, weight}` → `{ok, material, weight,
+  reward, rate_range}` or `{ok: false, error, message}`. Calls
+  `t2c.rewards.normalize_material` / `calculate_reward` /
+  `get_rate_range` directly; no reward math lives in this route or in
+  JS.
+- `GET /api/locations?city=` — `{ok, city, records}` or `{ok: false,
+  error: "unknown_city", cities}`. Calls
+  `t2c.locations.list_location_records` directly.
+- `/chat` is unchanged from Phase 3 — the new UI just calls it.
+
+### Dead UI removed (Task 15)
+
+`templates/process.html` (superseded by `rewards.html`),
+`static/chatbot/chatbot.js` and the floating widget it built (superseded
+by the dedicated Ask T2C page — verified via `grep` that nothing still
+referenced it before deleting), and two genuinely-unused CSS rules
+(`.form-grid`, a leftover from planning) found by cross-referencing
+every CSS class against every template/JS file.
+
+### Tests (Task 16)
+
+Added to `test_app.py`: reward page (render, correct calculation,
+unsupported-material rejection, invalid-weight rejection),
+`/api/reward` (valid, unsupported material, invalid weight),
+locations page render, `/api/locations` (known city, unknown city,
+and — importantly — asserting every returned record's `address`/
+`latitude`/`longitude` are `None`, i.e. no fabricated location data),
+and the `/assistant` page rendering. The one existing test tied to the
+old `/process` route was updated to hit `/rewards` (route renamed as
+part of the redesign) and to match Jinja's autoescaped apostrophe in
+the error message (`isn&#39;t`) rather than a raw one — a template
+detail, not a behavior change. **Full suite: 51 passed** (41 from
+Phase 3 + 10 new), still `pytest` from the repo root.
+
+### Manual product test (Task 17) — all via the Flask test client, several live against OpenAI
+
+- Home: hero, nav (including active-page highlighting via
+  `request.endpoint`), and all four feature cards render.
+- Reward: plastic (₦450.00 for 5kg), nylon (₦270.00 for 2kg), aluminum
+  (₦1050.00 for 3kg), invalid weight → clean error text, unsupported
+  material (glass) → clean error text. All verified against
+  `t2c.rewards.calculate_reward` directly, not eyeballed.
+- Location: known city (Lagos) → Ikeja etc. with the honest
+  no-address note; unknown city query param → falls back to the
+  default city rather than erroring; `/api/locations` confirmed
+  `address`/`latitude`/`longitude` are `None` on every record.
+- Assistant (live, real `.env` key): reward query, Nigerian-English
+  reward query, unsupported-material query, location query, and a
+  two-turn follow-up ("How much for 5kg plastic?" → "What about 10kg?")
+  all returned correctly grounded answers via the real Flask session.
+  With an invalid key, `/chat` cleanly fell back to `mode:
+  local_fallback` with no crash.
+- Contact: valid submission redirects and now actually shows the
+  success message, honestly labeled as not-yet-connected to email/storage.
+- Responsive: no browser/screenshot tool was available in this
+  environment (see limitation below), so this was verified
+  structurally rather than visually — HTML tag-balance checked
+  programmatically for every page (all balanced, no unclosed tags),
+  and every flex/grid layout that could overflow at narrow widths was
+  reasoned through by hand. One real risk was found and fixed this way
+  (not hypothetically): the hero rate-preview row (long material name +
+  rate side by side with no wrap) could overflow at 375px — fixed with
+  `flex-wrap` and `min-width: 0`. The primary nav (6 links + a CTA)
+  was recalculated to need more room than a 768px or even 1024px
+  viewport comfortably gives, so the hamburger-menu breakpoint was
+  moved up to 1080px rather than left at a smaller, guessed value.
+
+### Known limitations (honest, not fixed in this phase)
+
+- **No visual/screenshot verification was possible** — there is no
+  browser or screenshot tool available in this environment. Every
+  responsive and visual claim above was verified structurally (HTML
+  validity, computed contrast ratios, manual CSS/layout reasoning), not
+  by looking at rendered pixels. A real device/browser check is still
+  recommended before treating the redesign as fully verified.
+- The reward calculator's client-side validation duplicates *presentation*
+  rules only (required fields, non-negative numeric weight) — this is
+  intentionally not "duplicating reward math," but it does mean the
+  same basic rule is expressed twice (HTML/JS and Python); acceptable,
+  not risk-free if they're ever changed independently.
+- T2CVision is still not integrated anywhere in the UI beyond the
+  honest "Coming soon" card on the home page — no placeholder route or
+  upload UI was built, since there's no model to call yet.
+- The `/rewards` route replaces `/process` outright (no redirect kept)
+  — fine since nothing is deployed, but worth knowing if any external
+  link ever pointed at the old path.
+
+### Recommended next phase
+
+**Phase 5 candidates, in order:**
+1. A real device/browser pass to confirm the responsive and visual
+   work holds up outside of structural verification.
+2. T2CVision: train and save a real model, then decide whether it
+   becomes a genuine "Identify Waste" upload flow in the UI (replacing
+   the "Coming soon" card) or stays a backend-only capability for now.
+3. Persistence/accounts — still deliberately last.
+
+---
+
 ## Original Audit (Pre-Cleanup Baseline)
 
 *The sections below describe the repository as it existed before Phase 1. Kept for historical reference — several findings here (the nested duplication, committed venv, chatbot/reward contradiction, broken contact form, vision rescaling bug, duplicate chat widget) have since been fixed, as documented above.*

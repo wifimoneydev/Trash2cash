@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Trash2Cash — Turn Waste Into Value{% endblock %}</title>
+    <meta name="description" content="{% block description %}Trash2Cash helps you identify recyclable waste, estimate its cash value, and find where to recycle it in Nigeria.{% endblock %}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+</head>
+<body>
+    {% import "_icons.html" as icons %}
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <header class="navbar">
+        <div class="container navbar-inner">
+            <a class="brand" href="{{ url_for('home') }}">
+                <span class="brand-mark">{{ icons.recycle(18) }}</span>
+                Trash2Cash
+            </a>
+
+            <button class="nav-toggle" type="button" id="nav-toggle" aria-expanded="false" aria-controls="nav-links">
+                {{ icons.menu() }}
+                <span class="sr-only">Open menu</span>
+            </button>
+
+            <nav aria-label="Primary">
+                <ul class="nav-links" id="nav-links">
+                    <li><a href="{{ url_for('home') }}#how-it-works">How It Works</a></li>
+                    <li><a href="{{ url_for('rewards') }}" {% if request.endpoint == 'rewards' %}aria-current="page"{% endif %}>Rewards</a></li>
+                    <li><a href="{{ url_for('locations') }}" {% if request.endpoint == 'locations' %}aria-current="page"{% endif %}>Drop-off Finder</a></li>
+                    <li><a href="{{ url_for('assistant') }}" {% if request.endpoint == 'assistant' %}aria-current="page"{% endif %}>Ask T2C</a></li>
+                    <li><a href="{{ url_for('about') }}" {% if request.endpoint == 'about' %}aria-current="page"{% endif %}>About</a></li>
+                    <li><a href="{{ url_for('contact') }}" {% if request.endpoint == 'contact' %}aria-current="page"{% endif %}>Contact</a></li>
+                    <li class="nav-cta"><a class="btn btn-primary btn-sm" href="{{ url_for('rewards') }}">Calculate Reward</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>&copy; 2025 Trash2Cash. Built for Nigeria's recycling economy.</p>
+            <nav aria-label="Footer">
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('about') }}">About</a></li>
+                    <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                    <li><a href="{{ url_for('assistant') }}">Ask T2C</a></li>
+                </ul>
+            </nav>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

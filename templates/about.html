@@ -1,31 +1,31 @@
-<!-- templates/about.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>About - Trash2Cash</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-    <nav>
-        <ul>
-            <li><a href="{{ url_for('home') }}">Home</a></li>
-            <li><a href="{{ url_for('about') }}">About</a></li>
-            <li><a href="{{ url_for('contact') }}">Contact</a></li>
-        </ul>
-    </nav>
+{% extends "base.html" %}
 
+{% block title %}About — Trash2Cash{% endblock %}
+{% block description %}Trash2Cash is a recycling incentive platform for Nigeria, starting in Lagos and Abuja.{% endblock %}
+
+{% block content %}
+
+<section class="section-dark">
     <div class="container">
-        <h1>About Trash2Cash</h1>
-        <p>
-            Trash2Cash is a recycling initiative that rewards users for collecting and submitting recyclable materials like plastic bottles, pure water sachets, and aluminum cans.
-        </p>
-        <p>
-            Our mission is to create a cleaner environment while providing financial incentives to everyday citizens. With AI-powered drop-off containers and an automated rewards system, we're changing how recycling works in Nigeria—starting from Lagos and Abuja.
-        </p>
-        <p>
-            Join us as we build a greener and smarter future!
-        </p>
+        <p class="eyebrow">About</p>
+        <h1>Recycling that pays, starting in Nigeria.</h1>
     </div>
-</body>
-</html>
+</section>
+
+<section>
+    <div class="container prose">
+        <h2>The problem</h2>
+        <p>Nigeria generates thousands of metric tons of waste every day, and only a small fraction of it is properly recycled. Plastic bottles, pure water sachets, and aluminum cans pile up in streets and drainage systems, contributing to flooding and pollution &mdash; not because people don't care, but because there's often no easy, worthwhile way to do something about it.</p>
+
+        <h2>The idea</h2>
+        <p>Trash2Cash gives recycling a direct financial incentive. Sort your plastic, nylon, or aluminum waste, estimate what it's worth using our rate table, and take it to a recycling area near you. No app-based payment or wallet exists yet &mdash; today, Trash2Cash helps you estimate value and find where to go, in plain language if you'd rather just ask.</p>
+
+        <h2>Where we're starting</h2>
+        <p>We're focused on Lagos and Abuja first, covering a small, specific set of local government areas rather than claiming citywide coverage we haven't verified. As more drop-off points are confirmed, we'll add them &mdash; not before.</p>
+
+        <h2>Where we're headed</h2>
+        <p>The long-term vision is a more automated system: AI-assisted waste identification from a photo (in development as T2CVision), and eventually verified physical drop-off or exchange points. Neither exists in production today, and we'd rather say that plainly than imply otherwise.</p>
+    </div>
+</section>
+
+{% endblock %}

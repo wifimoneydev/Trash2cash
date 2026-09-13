@@ -1,56 +1,119 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Trash2Cash</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
-    <!-- Animate.css for entrance animations -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-</head>
-<body>
-    <!-- Navigation Bar -->
-    <nav class="navbar">
-        <ul>
-            <a href="{{ url_for('home') }}">Home</a>
-            <li><a href="{{ url_for('about') }}">About Us</a></li>
-            <li><a href="{{ url_for('contact') }}">Contact Us</a></li>
-            <li><a href="{{ url_for('process') }}">T2C</a></li>
-        </ul>
-    </nav>
+{% extends "base.html" %}
+{% import "_icons.html" as icons %}
 
-    <!-- Welcome Section -->
-    <section class="welcome-section animate__animated animate__fadeIn">
-        <h1>Welcome to <span class="highlight">Trash2Cash</span></h1>
-        <p>Turning waste into wealth with every drop-off.</p>
-        <a href="{{ url_for('process') }}" class="btn-green animate__animated animate__pulse animate__infinite">Get Started</a>
-    </section>
+{% block content %}
 
-    <!-- Recycling Info Section -->
-    <section class="recycling-info animate__animated animate__fadeInUp">
-        <h2>Why Recycle with Trash2Cash?</h2>
-        <div class="info-cards">
-            <div class="card">
-                <h3>Earn Money</h3>
-                <p>Get paid for your recyclables based on type and weight.</p>
+<section class="hero">
+    <div class="container hero-inner">
+        <div>
+            <p class="eyebrow">Recycling, made worth your while</p>
+            <h1>Turn Waste Into <span class="accent-word">Value</span>.</h1>
+            <p class="hero-lede">Trash2Cash helps you identify recyclable waste, estimate its cash value, and find where to take it — starting in Lagos and Abuja.</p>
+            <div class="hero-actions">
+                <a class="btn btn-accent" href="{{ url_for('rewards') }}">Calculate Reward</a>
+                <a class="btn btn-outline" href="{{ url_for('assistant') }}">Ask T2C</a>
             </div>
-            <div class="card">
-                <h3>Find Drop-Offs</h3>
-                <p>Use our app to locate your nearest recycling center fast.</p>
-            </div>
-            <div class="card">
-                <h3>Save the Planet</h3>
-                <p>Reduce waste and protect your environment.</p>
+            <div class="hero-badges">
+                <span class="hero-badge">{{ icons.leaf(14) }} Lagos &amp; Abuja</span>
+                <span class="hero-badge">{{ icons.sparkle(14) }} AI-assisted answers</span>
+                <span class="hero-badge">{{ icons.recycle(14) }} 3 materials accepted</span>
             </div>
         </div>
-    </section>
 
-    <!-- Footer -->
-    <footer>
-        <p>&copy; 2025 Trash2Cash. All rights reserved.</p>
-    </footer>
+        <div class="hero-panel" aria-label="Current payout rates">
+            {% for material, rate in rates.items() %}
+            <div class="hero-panel-row">
+                <span class="material">{{ material }}</span>
+                <span class="rate">₦{{ rate[0] }}&ndash;₦{{ rate[1] }}/kg</span>
+            </div>
+            {% endfor %}
+            <p class="hero-panel-foot">Fixed reference rates, not a live market feed. <a href="{{ url_for('rewards') }}" style="color:inherit;">Estimate your reward &rarr;</a></p>
+        </div>
+    </div>
+</section>
 
-    <!-- Chatbot widget: chatbot.js builds its own icon/window at runtime -->
-    <script src="{{ url_for('static', filename='chatbot/chatbot.js') }}"></script>
-</body>
-</html>
+<section aria-labelledby="features-heading">
+    <div class="container">
+        <div class="section-head">
+            <p class="eyebrow">What you can do today</p>
+            <h2 id="features-heading">Four ways Trash2Cash helps you recycle smarter</h2>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <span class="icon-badge accent">{{ icons.sparkle() }}</span>
+                <span class="badge badge-soon">Coming soon</span>
+                <h3>Identify Waste</h3>
+                <p>AI waste identification from a photo is in development (T2CVision) — not available yet.</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="icon-badge">{{ icons.calculator() }}</span>
+                <span class="badge badge-live">Available</span>
+                <h3>Calculate Reward</h3>
+                <p>Pick a material and weight to get an instant, honest estimate based on our fixed rate table.</p>
+                <a class="card-link" href="{{ url_for('rewards') }}">Open calculator {{ icons.arrow_right() }}</a>
+            </div>
+
+            <div class="feature-card">
+                <span class="icon-badge">{{ icons.pin() }}</span>
+                <span class="badge badge-live">Available</span>
+                <h3>Find Drop-off</h3>
+                <p>Browse the local government areas we currently cover in Lagos and Abuja.</p>
+                <a class="card-link" href="{{ url_for('locations') }}">Find a location {{ icons.arrow_right() }}</a>
+            </div>
+
+            <div class="feature-card">
+                <span class="icon-badge">{{ icons.chat() }}</span>
+                <span class="badge badge-live">Available</span>
+                <h3>Ask T2C</h3>
+                <p>Ask about rates, materials, or locations in plain English (or Pidgin) and get a grounded answer.</p>
+                <a class="card-link" href="{{ url_for('assistant') }}">Start chatting {{ icons.arrow_right() }}</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-alt" id="how-it-works" aria-labelledby="how-it-works-heading">
+    <div class="container">
+        <div class="section-head">
+            <p class="eyebrow">How it works</p>
+            <h2 id="how-it-works-heading">From waste to wallet, step by step</h2>
+        </div>
+
+        <div class="steps">
+            <div class="step">
+                <span class="step-number">01</span>
+                <h3>Sort your waste</h3>
+                <p>Separate plastic bottles, pure water sachets, and aluminum cans from other trash.</p>
+            </div>
+            <div class="step">
+                <span class="step-number">02</span>
+                <h3>Estimate its value</h3>
+                <p>Use the reward calculator to see what your materials are worth by weight.</p>
+            </div>
+            <div class="step">
+                <span class="step-number">03</span>
+                <h3>Find a drop-off point</h3>
+                <p>Check which areas of Lagos or Abuja we currently list for recycling.</p>
+            </div>
+            <div class="step">
+                <span class="step-number">04</span>
+                <h3>Recycle and earn</h3>
+                <p>Take your sorted materials to a listed area and get paid on the spot — there's no in-app payment or wallet yet.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section aria-labelledby="cta-heading">
+    <div class="container card" style="display:flex; flex-wrap:wrap; gap:1.5rem; align-items:center; justify-content:space-between;">
+        <div>
+            <h2 id="cta-heading" style="margin-bottom:0.5rem;">Not sure where to start?</h2>
+            <p>Ask T2C in plain language — it's grounded in our real rates and locations, not guesses.</p>
+        </div>
+        <a class="btn btn-primary" href="{{ url_for('assistant') }}">Ask T2C {{ icons.arrow_right() }}</a>
+    </div>
+</section>
+
+{% endblock %}

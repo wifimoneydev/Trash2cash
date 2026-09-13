@@ -1,43 +1,49 @@
-<!-- templates/contact.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Contact Us - Trash2Cash</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-    <nav class="navbar">
-        <div class="navbar-container">
-            <a href="{{ url_for('home') }}" class="logo">Trash2Cash</a>
-            <ul class="nav-links">
-                <li><a href="{{ url_for('home') }}">Home</a></li>
-                <li><a href="{{ url_for('about') }}">About</a></li>
-                <li><a href="{{ url_for('contact') }}">Contact</a></li>
-            </ul>
-        </div>
-    </nav>
+{% extends "base.html" %}
 
-    <div class="section" style="margin-top: 80px;">
-        <div class="section-content">
-            <h1>Contact Us</h1>
-            <p>If you have any questions or would like to get involved, reach out to us using the form below.</p>
+{% block title %}Contact — Trash2Cash{% endblock %}
+{% block description %}Get in touch with Trash2Cash.{% endblock %}
 
-            <form method="post" action="{{ url_for('contact') }}" class="contact-form">
-                <label for="name">Name</label>
-                <input type="text" id="name" name="name" required>
+{% block content %}
 
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required>
+<section class="section-dark">
+    <div class="container">
+        <p class="eyebrow">Contact</p>
+        <h1>Get in touch.</h1>
+        <p class="hero-lede">Questions, feedback, or want to get involved? Send a message below.</p>
+    </div>
+</section>
 
-                <label for="message">Message</label>
-                <textarea id="message" name="message" rows="5" required></textarea>
+<section>
+    <div class="container" style="max-width:560px;">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-success" role="status">{{ message }} (This form is not yet connected to email or storage &mdash; messages are logged locally for now.)</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
 
-                <button type="submit" class="btn">Send Message</button>
+        <div class="card">
+            <form method="post" action="{{ url_for('contact') }}" novalidate>
+                <div class="field">
+                    <label for="name">Name</label>
+                    <input class="input" type="text" id="name" name="name" required autocomplete="name">
+                </div>
+
+                <div class="field">
+                    <label for="email">Email</label>
+                    <input class="input" type="email" id="email" name="email" required autocomplete="email">
+                </div>
+
+                <div class="field">
+                    <label for="message">Message</label>
+                    <textarea class="input" id="message" name="message" rows="5" required></textarea>
+                </div>
+
+                <button class="btn btn-primary btn-block" type="submit">Send Message</button>
             </form>
         </div>
     </div>
+</section>
 
-    <script src="{{ url_for('static', filename='chatbot/chatbot.js') }}"></script>
-</body>
-</html>
+{% endblock %}

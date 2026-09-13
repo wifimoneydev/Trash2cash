@@ -18,4 +18,3 @@ t2c/vision/model/
 *.dylib
 *.so
 *.egg-info/
-``

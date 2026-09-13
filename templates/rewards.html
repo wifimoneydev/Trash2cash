@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% import "_icons.html" as icons %}
+
+{% block title %}Reward Calculator — Trash2Cash{% endblock %}
+{% block description %}Estimate your Trash2Cash reward by material and weight, using our published rate table.{% endblock %}
+
+{% block content %}
+
+<section class="section-dark">
+    <div class="container">
+        <p class="eyebrow">Reward calculator</p>
+        <h1>What's your waste worth?</h1>
+        <p class="hero-lede">Choose a material and enter its weight for an instant estimate, straight from our rate table.</p>
+    </div>
+</section>
+
+<section>
+    <div class="container split">
+        <div class="card">
+            <form id="reward-form" method="POST" action="{{ url_for('rewards') }}" novalidate>
+                <div class="field" id="material-field">
+                    <label for="material">Material</label>
+                    <select class="input" id="material" name="material" required>
+                        <option value="" disabled {% if not material %}selected{% endif %}>Select a material&hellip;</option>
+                        <option value="plastic" {% if material=='plastic' %}selected{% endif %}>Plastic (PET bottles)</option>
+                        <option value="nylon" {% if material=='nylon' %}selected{% endif %}>Nylon (Pure water sachets)</option>
+                        <option value="aluminum" {% if material=='aluminum' %}selected{% endif %}>Aluminum (Cans)</option>
+                    </select>
+                    <p class="error-text">Please choose a material.</p>
+                </div>
+
+                <div class="field" id="weight-field">
+                    <label for="weight">Weight (kg)</label>
+                    <input class="input" type="number" id="weight" name="weight" min="0" step="0.1" inputmode="decimal" placeholder="e.g. 5" required value="{{ weight or '' }}" aria-describedby="weight-hint">
+                    <p class="hint" id="weight-hint">Total weight of sorted material, in kilograms.</p>
+                    <p class="error-text">Enter a weight of 0 or more.</p>
+                </div>
+
+                <button class="btn btn-primary btn-block" type="submit" id="reward-submit">Calculate Reward</button>
+            </form>
+
+            <div class="result-panel {% if reward is not none or error %}is-visible{% endif %} {% if error %}is-error{% endif %}" id="result-panel" role="status" aria-live="polite">
+                {% if error %}
+                    <p class="result-label">Couldn't calculate that</p>
+                    <p class="result-note">{{ error }}</p>
+                {% elif reward is not none %}
+                    <p class="result-label">Estimated reward</p>
+                    <p class="result-value">₦{{ "%.2f"|format(reward) }}</p>
+                    <p class="result-note">Estimate for {{ weight }}kg of {{ material_label }}. Based on a fixed rate table &mdash; not a live market price.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div>
+            <h2>Current rates</h2>
+            <table class="rate-table">
+                <thead>
+                    <tr><th scope="col">Material</th><th scope="col">Rate (₦/kg)</th></tr>
+                </thead>
+                <tbody>
+                {% for m, r in rates.items() %}
+                    <tr><td>{{ m }}</td><td>₦{{ r[0] }}&ndash;₦{{ r[1] }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <p class="hint" style="margin-top:1rem;">These are the only three materials currently supported. Not sure if something else is accepted? <a href="{{ url_for('assistant') }}">Ask T2C</a>.</p>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/rewards.js') }}"></script>
+{% endblock %}

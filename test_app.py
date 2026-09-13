@@ -21,10 +21,82 @@ def test_home_page_renders():
     assert r.status_code == 200
 
 
-def test_process_route_calculates_reward():
-    r = client().post("/process", data={"material": "plastic", "weight": "5", "location": "lagos"})
+def test_rewards_page_renders():
+    r = client().get("/rewards")
     assert r.status_code == 200
-    assert "₦450.0" in r.get_data(as_text=True)  # ₦450.0
+
+
+def test_rewards_route_calculates_reward():
+    r = client().post("/rewards", data={"material": "plastic", "weight": "5"})
+    assert r.status_code == 200
+    assert "₦450.00" in r.get_data(as_text=True)
+
+
+def test_rewards_route_rejects_unsupported_material():
+    r = client().post("/rewards", data={"material": "glass", "weight": "5"})
+    assert r.status_code == 200
+    body = r.get_data(as_text=True)
+    assert "verified material list" in body
+
+
+def test_rewards_route_rejects_invalid_weight():
+    r = client().post("/rewards", data={"material": "plastic", "weight": "not-a-number"})
+    assert r.status_code == 200
+    assert "Please enter a weight of 0 or more" in r.get_data(as_text=True)
+
+
+def test_api_reward_valid():
+    r = client().post("/api/reward", json={"material": "aluminum", "weight": 5})
+    assert r.status_code == 200
+    body = r.get_json()
+    assert body["ok"] is True
+    assert body["material"] == "Aluminum (Cans)"
+    assert body["reward"] == 1750.0
+
+
+def test_api_reward_unsupported_material():
+    r = client().post("/api/reward", json={"material": "glass", "weight": 5})
+    body = r.get_json()
+    assert body["ok"] is False
+    assert body["error"] == "unsupported_material"
+
+
+def test_api_reward_invalid_weight():
+    r = client().post("/api/reward", json={"material": "plastic", "weight": "abc"})
+    body = r.get_json()
+    assert body["ok"] is False
+    assert body["error"] == "invalid_weight"
+
+
+def test_locations_page_renders():
+    r = client().get("/locations")
+    assert r.status_code == 200
+    assert "Ikeja" in r.get_data(as_text=True)
+
+
+def test_api_locations_known_city():
+    r = client().get("/api/locations?city=Lagos")
+    body = r.get_json()
+    assert body["ok"] is True
+    lgas = [rec["lga"] for rec in body["records"]]
+    assert "Ikeja" in lgas
+    # no fabricated address/coordinates on any returned record
+    for rec in body["records"]:
+        assert rec["address"] is None
+        assert rec["latitude"] is None
+        assert rec["longitude"] is None
+
+
+def test_api_locations_unknown_city():
+    r = client().get("/api/locations?city=Kano")
+    body = r.get_json()
+    assert body["ok"] is False
+    assert body["error"] == "unknown_city"
+
+
+def test_assistant_page_renders():
+    r = client().get("/assistant")
+    assert r.status_code == 200
 
 
 def test_contact_get_renders():

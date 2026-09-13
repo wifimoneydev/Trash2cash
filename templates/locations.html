@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% import "_icons.html" as icons %}
+
+{% block title %}Drop-off Finder — Trash2Cash{% endblock %}
+{% block description %}Browse the Lagos and Abuja areas Trash2Cash currently lists for recycling drop-off.{% endblock %}
+
+{% block content %}
+
+<section class="section-dark">
+    <div class="container">
+        <p class="eyebrow">Drop-off finder</p>
+        <h1>Where can you recycle?</h1>
+        <p class="hero-lede">Browse the areas we currently cover. These are reference areas, not verified outlet addresses yet — see below.</p>
+    </div>
+</section>
+
+<section>
+    <div class="container">
+        <div class="city-tabs" role="group" aria-label="Choose a city" id="city-tabs">
+            {% for city_name in cities %}
+            <button type="button" class="city-tab"
+                    aria-pressed="{{ 'true' if city_name == selected_city else 'false' }}"
+                    data-city="{{ city_name }}">{{ city_name }}</button>
+            {% endfor %}
+        </div>
+
+        <div id="location-results" aria-live="polite">
+            {% include "_location_results.html" %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/locations.js') }}"></script>
+{% endblock %}

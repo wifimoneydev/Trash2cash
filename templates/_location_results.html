@@ -1,0 +1,16 @@
+{% import "_icons.html" as icons %}
+{% if records %}
+<div class="location-grid" id="location-grid">
+    {% for record in records %}
+    <div class="location-card">
+        <h3>{{ icons.pin(18) }} {{ record.lga }}</h3>
+        <p class="location-city">{{ record.city }}</p>
+        <p class="location-note">Exact outlet address not yet available &mdash; this is a static reference area.</p>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state" id="location-grid">
+    <p>We don't currently have any listed areas for that city.</p>
+</div>
+{% endif %}
