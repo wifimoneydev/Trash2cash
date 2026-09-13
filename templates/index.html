@@ -45,29 +45,12 @@
         </div>
     </section>
 
-    <!-- Chatbot Widget -->
-    <div id="chat-toggle" onclick="toggleChat()">💬</div>
-
-    <div id="chatbox" style="display:none;">
-        <div id="chat-log"></div>
-        <input type="text" id="user-input" placeholder="Ask me anything..." />
-    </div>
-
     <!-- Footer -->
     <footer>
         <p>&copy; 2025 Trash2Cash. All rights reserved.</p>
     </footer>
 
+    <!-- Chatbot widget: chatbot.js builds its own icon/window at runtime -->
     <script src="{{ url_for('static', filename='chatbot/chatbot.js') }}"></script>
-    <script>
-        function toggleChat() {
-            const chatbox = document.getElementById('chatbox');
-            if (chatbox.style.display === 'none' || chatbox.style.display === '') {
-                chatbox.style.display = 'flex';
-            } else {
-                chatbox.style.display = 'none';
-            }
-        }
-    </script>
 </body>
 </html>

@@ -1,0 +1,10 @@
+# Main app + chatbot
+Flask
+nltk
+scikit-learn
+joblib
+
+# T2CVision (training + inference)
+tensorflow
+numpy
+matplotlib

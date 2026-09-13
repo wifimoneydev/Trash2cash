@@ -1,42 +1,12 @@
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+from flask import Flask, render_template, request, jsonify, flash, redirect
 
-from flask import Flask, render_template, request, jsonify
-from t2cchatbot.chatbot import get_bot_response
+from t2c.rewards import RATES, get_rate_range, calculate_reward
+from t2c.locations import LOCATIONS, get_locations
+from t2c.chatbot.chatbot import get_bot_response
 
 app = Flask(__name__)
+app.secret_key = "dev"  # only needed for flash(); not a real secret, not for production
 
-# Global RATES and LOCATIONS definitions
-RATES = {
-    "Plastic (PET bottles)": (80, 100),
-    "Nylon (Pure water sachets)": (70, 200),
-    "Aluminum (Cans)": (200, 500)
-}
-
-LOCATIONS = {
-    "Lagos": ["Ikeja", "Surulere", "Yaba", "Lekki"],
-    "Abuja": ["Garki", "Wuse", "Maitama", "Kubwa"]
-}
-
-def get_rate_range(material):
-    """Return the rate range for a given material."""
-    return RATES.get(material, (0, 0))
-
-def calculate_reward(material, weight):
-    """Calculate reward based on material and weight."""
-    material_lower = material.lower()
-    for key, (min_rate, max_rate) in RATES.items():
-        if material_lower in key.lower():
-            reward = (min_rate + max_rate) / 2 * float(weight)
-            return reward
-    return 0
-
-def get_locations(state):
-    """Return the list of locations for a given state."""
-    return LOCATIONS.get(state, [])
-
-# ✅ Renamed this function from web_interface to home
 @app.route("/", methods=["GET", "POST"])
 def home():
     reward = None
@@ -87,11 +57,10 @@ def contact():
         name = request.form.get("name")
         email = request.form.get("email")
         message = request.form.get("message")
-        
-        # For now, just log or print (or email/store later)
+
+        # Local/mock only: no email is sent and nothing is persisted.
         print("Contact form submitted:", name, email, message)
-        
-        # Flash message to confirm (requires session key setup if used)
+
         flash("Message sent successfully!")
         return redirect("/contact")
 

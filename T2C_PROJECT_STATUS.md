@@ -2,6 +2,116 @@
 
 *Audit date: 2026-09-13. Based on direct code inspection, static analysis, and live execution (Flask test client, pytest, chatbot inference) — not on README claims.*
 
+*Updated 2026-09-13 after Phase 1 (Repository Cleanup and Canonicalization). The original audit below is preserved as the pre-cleanup baseline; see the Phase 1 section immediately below for current state.*
+
+---
+
+## Phase 1: Repository Cleanup and Canonicalization — Completed
+
+### Canonical copy selected, and why
+
+Four overlapping copies of the app existed (root, `trash2cash/`, `trash2cash/trash2cash/`, `trash2cash/t2cchatbot/spider/`). They were compared file-by-file (`diff`, mtimes) rather than assumed:
+
+- **App shell** (`app.py`/`project.py`, templates, `static/css`): the **root copy** won on every file compared — it was the newest by mtime and the most feature-complete (POST-capable contact route, updated `home()` naming, nicer templates with animations). The three nested copies were mutually near-identical, older, and in one case (`spider/project.py`) missing the chatbot import entirely.
+- **`t2cchatbot`**: only existed in one place, `trash2cash/t2cchatbot/` — promoted to canonical by necessity, after stripping its committed `venv/` and its own internal `spider/` duplicate.
+- **`t2cvision`**: root copy won — identical core code to the nested copy, plus non-empty scaffold directories the nested copy lacked.
+- **README**: the root `trash2cash/README.md` and the CS50-submission-style `trash2cash/trash2cash/README.md` (identical to the `spider/` copy) contained genuinely different content, not just staleness. The CS50 submission version (with video demo link and fuller narrative) was kept as the basis for the new root `README.md`, corrected in the sections that overstated current functionality (e.g. "real-time market prices," "nearest drop-off centers are recommended").
+
+### What was removed
+
+- The entire nested `trash2cash/` directory tree (three levels of duplicate app copies), including a git-tracked **4,580-file Python virtualenv** (`trash2cash/t2cchatbot/venv/`) and a duplicate `spider/` copy of the whole app nested inside the chatbot directory.
+- The empty, now-superseded `t2cvision/` shell at root (code moved to `t2c/vision/`) and old duplicate `.DS_Store` / dead `gitignore` (no leading dot) files.
+- The dead root-level `__init__.py` (empty, unused — nothing imported the repo root as a package).
+- The empty root-level `t2cchatbot/` stub and the local, gitignored `venv/` and `t2cvision/venv/` directories were **left in place on disk** (untouched, per instruction not to delete a developer's local environment that sits outside tracked files) — they are not committed and contain no unique code. They're safe to delete manually; a fresh venv can be built from the new root `requirements.txt`.
+- **Known follow-up, not done in this phase**: the removed venv's blobs still exist in git history and in Git LFS storage (this repo has LFS configured — even test-fixture `.pkl` files from inside the old venv's `site-packages` had been pushed to LFS). Shrinking history/LFS storage requires a history rewrite (e.g. `git filter-repo` + `git lfs prune`), which changes commit hashes and needs separate, explicit sign-off before touching the shared `origin` remote — not attempted here.
+
+### Modules unified
+
+- New `t2c/` package: `t2c/chatbot/` (moved from `trash2cash/t2cchatbot/`, minus venv/spider/the dead empty `utils.py`), `t2c/vision/` (moved from root `t2cvision/`), plus two new shared modules:
+  - **`t2c/rewards.py`** — `RATES`, `get_rate_range()`, `calculate_reward()`. Values are unchanged from the original `project.py` (₦80–100 plastic, ₦70–200 nylon, ₦200–500 aluminum) — nothing invented.
+  - **`t2c/locations.py`** — `LOCATIONS`, `get_locations()`. Same static LGA lists as before, explicitly documented as static, not live.
+- `project.py` now imports both from `t2c/`, and still re-exports `calculate_reward`/`get_rate_range`/`get_locations` at module level so `test_project.py` needed no changes.
+- `app.py` is now the single canonical entrypoint (`from project import app`; `python app.py` starts it). It previously had its own broken, parallel set of routes and a dead import (`t2cchatbot.utils.tokenize`, from a file that was empty) — that duplicate implementation is gone.
+- One `requirements.txt` (Flask, nltk, scikit-learn, joblib, tensorflow, numpy, matplotlib — every import actually used anywhere in the canonical tree) and one `requirements-dev.txt` (adds pytest).
+
+### Chatbot payout contradiction — fixed
+
+`t2c/chatbot/chatbot.py`'s `get_bot_response()` now special-cases the `payout_rates` intent to build its answer from `t2c.rewards.RATES` at call time, instead of returning a hardcoded USD string that disagreed with the real Naira rates. Verified live: asking the chatbot "What are the rates?" now returns the exact same ₦80–100/₦70–200/₦200–500 figures the `/process` calculator uses. A regression test (`test_app.py::test_chatbot_payout_rates_match_reward_module`) asserts this so it can't silently drift apart again. The classifier itself (NLTK + scikit-learn Naive Bayes, 7 intents, ~20 training phrases) is unchanged — no retraining, no LLM.
+
+### Contact form — fixed
+
+`project.py`'s `/contact` route previously called `flash()`/`redirect()` without importing them and without a `SECRET_KEY`, so any POST raised an unhandled exception. Both imports and a (non-production, clearly-a-placeholder) `app.secret_key` were added. The form remains exactly what it was: it prints the submission to the console and redirects back — no email sending, no storage — and that's now documented rather than silently broken.
+
+### T2CVision rescaling bug — fixed
+
+`identify.py` previously divided pixel values by 255 a second time on top of the `Rescaling(1./255)` layer already inside the trained model, which would have corrupted any real inference. That manual rescale is removed. Separately — since **no trained model file exists anywhere in this repo** — `identify.py` now fails with a clear, explicit error naming the missing file and pointing at `trainvision.py`, instead of a raw stack trace or (worse) a silent wrong answer. No model was fabricated or trained during this phase.
+
+### Duplicate chat widget — fixed
+
+`templates/index.html` rendered two independent chat UIs: a static, non-functional one (`#chat-toggle`/`#chatbox`, wired only to show/hide, never called `/chat`) and a second one injected at runtime by `static/chatbot/chatbot.js` (which does call `/chat`). The dead static markup and its inline script were removed; the one working widget remains.
+
+### Verified working from repo root (Final Verification)
+
+```
+pytest                    → 9 passed (3 original business-logic tests + 6 new route/regression tests)
+python app.py             → starts cleanly, serves real HTTP 200s on / and /about (verified via test client and a live server on an alternate port — port 5000 is occupied by macOS AirPlay Receiver locally, unrelated to this app)
+python -c "import project, app"   → clean import from repo root, no sys.path hacks needed
+```
+
+Live-verified via Flask test client: home page renders, `/process` computes ₦450.0 for 5kg plastic (unchanged, correct math), `/chat` responds for both a generic intent and `payout_rates` (now consistent with `t2c.rewards`), `/contact` GET renders and POST redirects (302) instead of crashing, and both static assets (`css/styles.css`, `chatbot/chatbot.js`) return 200.
+
+### Current canonical structure
+
+```
+app.py                  # entrypoint — python app.py
+project.py              # Flask routes + app object
+templates/               # 4 HTML templates
+static/                  # css/, chatbot/chatbot.js
+t2c/
+├── __init__.py
+├── rewards.py           # RATES, get_rate_range, calculate_reward
+├── locations.py         # LOCATIONS, get_locations
+├── chatbot/
+│   ├── chatbot.py        # get_bot_response (Naive Bayes + dynamic payout_rates)
+│   ├── train_chatbot.py
+│   ├── data/intents.json, data/chat_model.pkl
+│   └── README.md
+└── vision/
+    ├── identify.py       # CLI inference (fails clearly — no model present)
+    ├── trainvision.py    # MobileNetV2 transfer-learning pipeline
+    ├── data/dataset-resized/   # stock TrashNet, 2,527 images
+    ├── pet1.jpeg, pet2.jpeg
+    └── README.md
+test_project.py          # reward/location business-logic tests
+test_app.py               # route + chatbot-consistency tests (new)
+requirements.txt / requirements-dev.txt
+README.md
+T2C_PROJECT_STATUS.md
+```
+
+### Still broken / not addressed in Phase 1 (by design — out of scope)
+
+- No database, accounts, or persisted reward/exchange history.
+- No live rates or geodata — both `t2c/rewards.py` and `t2c/locations.py` are honestly-labeled static tables, not APIs.
+- T2CVision has no trained model artifact — training was not run (explicitly out of scope for this phase).
+- The chatbot's other six intents are still static canned strings (only `payout_rates` was wired to shared data — that was the one causing an actual contradiction; the rest don't reference numbers that could drift).
+- `debug=True` remains the default in `app.py`/`project.py`'s `main()` — fine for local dev, still not production-safe (deployment is a later phase).
+- Git history and LFS storage still contain the old venv blobs (see "What was removed" above) until a separate, explicitly-approved history rewrite.
+
+### Recommended next phase
+
+**Phase 2 candidates, in order:**
+1. Rewards/drop-off data layer: decide if `t2c/rewards.py`/`t2c/locations.py` should gain a config file or admin-editable source, still without inventing "live" data that doesn't exist.
+2. Chatbot: consider a confidence threshold + fallback response for out-of-distribution input (observed in the original audit: gibberish input gets confidently misclassified as a real intent).
+3. T2CVision: actually run `trainvision.py` to completion, save a real model, and record honest metrics — only after that, wire an `/identify` endpoint into `project.py`.
+4. Persistence/accounts — deliberately last, so it's built on the now-stable, de-duplicated codebase.
+
+---
+
+## Original Audit (Pre-Cleanup Baseline)
+
+*The sections below describe the repository as it existed before Phase 1. Kept for historical reference — several findings here (the nested duplication, committed venv, chatbot/reward contradiction, broken contact form, vision rescaling bug, duplicate chat widget) have since been fixed, as documented above.*
+
 ## Product Vision
 
 Trash2Cash (T2C) is a recycling incentive platform for Nigeria (initially Lagos and Abuja). The intended unified product lets a user: identify recyclable waste, estimate its cash value, find a drop-off location, ask questions via an assistant, and (eventually) track activity/rewards over time. Three modules exist today, built at different times, with no shared codebase or data layer: the main Flask app, T2CChatbot, and T2CVision.

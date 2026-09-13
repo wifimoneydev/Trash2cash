@@ -1,13 +1,20 @@
 venv/
+.venv/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.env
+.pytest_cache/
+.DS_Store
+
+# Model / checkpoint artifacts (not committed — see t2c/vision/README.md)
 *.h5
-*.pkl
+checkpoints/
+runs/
+t2c/vision/model/
+
 *.zip
 *.dylib
 *.so
 *.egg-info/
-data/
-trash2cash/t2cvision/data/dataset-resized/
