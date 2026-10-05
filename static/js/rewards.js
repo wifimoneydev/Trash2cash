@@ -2,21 +2,61 @@ document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("reward-form");
   if (!form) return;
 
+  const dataEl = document.getElementById("materials-data");
+  const materials = dataEl ? JSON.parse(dataEl.textContent) : [];
+  const materialsById = {};
+  materials.forEach(function (m) { materialsById[m.id] = m; });
+
+  const categoryField = document.getElementById("category");
   const materialField = document.getElementById("material");
-  const weightField = document.getElementById("weight");
+  const examplesHint = document.getElementById("material-examples-hint");
+  const categoryFieldWrap = document.getElementById("category-field");
   const materialFieldWrap = document.getElementById("material-field");
+  const weightField = document.getElementById("weight");
   const weightFieldWrap = document.getElementById("weight-field");
   const resultPanel = document.getElementById("result-panel");
   const submitBtn = document.getElementById("reward-submit");
+
+  function updateMaterialOptions(preserveSelection) {
+    const selectedCategory = categoryField.value;
+    const previousMaterial = materialField.value;
+    let hasVisibleSelection = false;
+
+    Array.from(materialField.options).forEach(function (opt) {
+      if (!opt.value) return; // the "Select a material…" placeholder
+      const matches = opt.dataset.category === selectedCategory;
+      opt.hidden = !matches;
+      if (matches && opt.value === previousMaterial) hasVisibleSelection = true;
+    });
+
+    materialField.disabled = !selectedCategory;
+
+    if (!preserveSelection || !hasVisibleSelection) {
+      materialField.value = "";
+      updateExamplesHint();
+    }
+  }
+
+  function updateExamplesHint() {
+    const material = materialsById[materialField.value];
+    examplesHint.textContent = material ? material.examples.join(", ") : "";
+  }
+
+  categoryField.addEventListener("change", function () {
+    updateMaterialOptions(false);
+  });
+  materialField.addEventListener("change", updateExamplesHint);
+
+  // On first load (e.g. a deep link from the Materials page with both
+  // category and material pre-selected), keep the pre-selected material
+  // visible instead of clearing it.
+  updateMaterialOptions(true);
 
   function showResult(html, isError) {
     resultPanel.innerHTML = html;
     resultPanel.classList.add("is-visible");
     resultPanel.classList.toggle("is-error", !!isError);
 
-    // On a short mobile viewport the button can sit near the bottom of
-    // the screen, pushing the result below the fold. Bring it into
-    // view rather than leaving the user to hunt for it.
     const rect = resultPanel.getBoundingClientRect();
     const fullyVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
     if (!fullyVisible) {
@@ -29,9 +69,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function validate() {
     let ok = true;
+    categoryFieldWrap.classList.remove("has-error");
     materialFieldWrap.classList.remove("has-error");
     weightFieldWrap.classList.remove("has-error");
 
+    if (!categoryField.value) {
+      categoryFieldWrap.classList.add("has-error");
+      ok = false;
+    }
     if (!materialField.value) {
       materialFieldWrap.classList.add("has-error");
       ok = false;
@@ -51,21 +96,21 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!validate()) return;
 
     submitBtn.disabled = true;
-    submitBtn.textContent = "Calculating…";
+    submitBtn.textContent = "Estimating…";
 
     fetch("/api/reward", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ material: materialField.value, weight: weightField.value }),
+      body: JSON.stringify({ material_id: materialField.value, weight: weightField.value }),
     })
       .then(function (res) { return res.json(); })
       .then(function (data) {
         if (data.ok) {
           showResult(
-            '<p class="result-label">Estimated reward</p>' +
+            '<p class="result-label">' + data.material_name + '</p>' +
             '<p class="result-value">₦' + data.reward.toFixed(2) + '</p>' +
-            '<p class="result-note">Estimate for ' + data.weight + 'kg of ' + data.material +
-            '. Based on a fixed rate table — not a live market price.</p>',
+            '<p class="result-note">' + data.weight + 'kg × ₦' + data.rate_per_kg + '/kg. ' + data.disclaimer + '</p>' +
+            '<p class="material-not-sure"><a href="/locations?material=' + encodeURIComponent(data.material_id) + '">Find a drop-off →</a></p>',
             false
           );
         } else {
@@ -80,7 +125,7 @@ document.addEventListener("DOMContentLoaded", function () {
       })
       .finally(function () {
         submitBtn.disabled = false;
-        submitBtn.textContent = "Calculate Reward";
+        submitBtn.textContent = "Estimate Reward";
       });
   });
 });

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Material not found — Trash2Cash{% endblock %}
+
+{% block content %}
+
+<section class="section-dark">
+    <div class="container">
+        <p class="eyebrow">Materials</p>
+        <h1>We couldn't find that material.</h1>
+        <p class="hero-lede">"{{ slug }}" doesn't match anything in our current catalogue.</p>
+    </div>
+</section>
+
+<section>
+    <div class="container card" style="display:flex; flex-wrap:wrap; gap:1.5rem; align-items:center; justify-content:space-between;">
+        <p>Browse the full list, or ask T2C if you're not sure what you have.</p>
+        <div class="material-card-actions">
+            <a class="btn btn-primary" href="{{ url_for('materials') }}">Browse Materials</a>
+            <a class="btn btn-outline" href="{{ url_for('assistant') }}">Ask T2C</a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

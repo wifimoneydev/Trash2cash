@@ -2,15 +2,15 @@
 {% import "_icons.html" as icons %}
 
 {% block title %}Reward Calculator — Trash2Cash{% endblock %}
-{% block description %}Estimate your Trash2Cash reward by material and weight, using our published rate table.{% endblock %}
+{% block description %}Estimate your Trash2Cash reward by category, material, and weight, using our published rate table.{% endblock %}
 
 {% block content %}
 
 <section class="section-dark">
     <div class="container">
         <p class="eyebrow">Reward calculator</p>
-        <h1>What's your waste worth?</h1>
-        <p class="hero-lede">Choose a material and enter its weight for an instant estimate, straight from our rate table.</p>
+        <h1>What are you recycling?</h1>
+        <p class="hero-lede">Choose a category, then the specific material, and enter its weight for an instant estimate.</p>
     </div>
 </section>
 
@@ -18,15 +18,27 @@
     <div class="container split">
         <div class="card">
             <form id="reward-form" method="POST" action="{{ url_for('rewards') }}" novalidate>
+                <div class="field" id="category-field">
+                    <label for="category">Category</label>
+                    <select class="input" id="category" name="category" required>
+                        <option value="" disabled {% if not category_id %}selected{% endif %}>Select a category&hellip;</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="error-text">Please choose a category.</p>
+                </div>
+
                 <div class="field" id="material-field">
                     <label for="material">Material</label>
-                    <select class="input" id="material" name="material" required>
-                        <option value="" disabled {% if not material %}selected{% endif %}>Select a material&hellip;</option>
-                        <option value="plastic" {% if material=='plastic' %}selected{% endif %}>Plastic (PET bottles)</option>
-                        <option value="nylon" {% if material=='nylon' %}selected{% endif %}>Nylon (Pure water sachets)</option>
-                        <option value="aluminum" {% if material=='aluminum' %}selected{% endif %}>Aluminum (Cans)</option>
+                    <select class="input" id="material" name="material" required {% if not category_id %}disabled{% endif %}>
+                        <option value="" disabled {% if not material_id %}selected{% endif %}>Select a material&hellip;</option>
+                        {% for m in all_materials %}
+                        <option value="{{ m.id }}" data-category="{{ m.category_id }}" {% if material_id == m.id %}selected{% endif %} {% if m.category_id != category_id %}hidden{% endif %}>{{ m.name }}</option>
+                        {% endfor %}
                     </select>
-                    <p class="error-text">Please choose a material.</p>
+                    <p class="hint" id="material-examples-hint">{% if material %}{{ material.examples | join(', ') }}{% endif %}</p>
+                    <p class="error-text">Please choose a specific material.</p>
                 </div>
 
                 <div class="field" id="weight-field">
@@ -36,7 +48,7 @@
                     <p class="error-text">Enter a weight of 0 or more.</p>
                 </div>
 
-                <button class="btn btn-primary btn-block" type="submit" id="reward-submit">Calculate Reward</button>
+                <button class="btn btn-primary btn-block" type="submit" id="reward-submit">Estimate Reward</button>
             </form>
 
             <div class="result-panel {% if reward is not none or error %}is-visible{% endif %} {% if error %}is-error{% endif %}" id="result-panel" role="status" aria-live="polite">
@@ -44,29 +56,32 @@
                     <p class="result-label">Couldn't calculate that</p>
                     <p class="result-note">{{ error }}</p>
                 {% elif reward is not none %}
-                    <p class="result-label">Estimated reward</p>
+                    <p class="result-label">{{ material.name }}</p>
                     <p class="result-value">₦{{ "%.2f"|format(reward) }}</p>
-                    <p class="result-note">Estimate for {{ weight }}kg of {{ material_label }}. Based on a fixed rate table &mdash; not a live market price.</p>
+                    <p class="result-note">{{ weight }}kg &times; ₦{{ material.rate_per_kg }}/kg. {{ disclaimer }}</p>
+                    <p class="material-not-sure"><a href="{{ url_for('locations') }}?material={{ material.id }}">Find a drop-off &rarr;</a></p>
                 {% endif %}
             </div>
         </div>
 
         <div>
-            <h2>Current rates</h2>
+            <h2>Popular rates</h2>
             <table class="rate-table">
                 <thead>
                     <tr><th scope="col">Material</th><th scope="col">Rate (₦/kg)</th></tr>
                 </thead>
                 <tbody>
-                {% for m, r in rates.items() %}
-                    <tr><td>{{ m }}</td><td>₦{{ r[0] }}&ndash;₦{{ r[1] }}</td></tr>
+                {% for m in all_materials %}
+                    <tr><td>{{ m.name }}</td><td>₦{{ m.rate_per_kg }}</td></tr>
                 {% endfor %}
                 </tbody>
             </table>
-            <p class="hint" style="margin-top:1rem;">These are the only three materials currently supported. Not sure if something else is accepted? <a href="{{ url_for('assistant') }}">Ask T2C</a>.</p>
+            <p class="hint" style="margin-top:1rem;">{{ disclaimer }} Not sure what you have? <a href="{{ url_for('assistant') }}">Ask T2C</a> or browse <a href="{{ url_for('materials') }}">all materials</a>.</p>
         </div>
     </div>
 </section>
+
+<script type="application/json" id="materials-data">{{ all_materials | tojson }}</script>
 
 {% endblock %}
 

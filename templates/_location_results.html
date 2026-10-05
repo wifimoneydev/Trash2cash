@@ -5,7 +5,13 @@
     <div class="location-card">
         <h3>{{ icons.pin(18) }} {{ record.lga }}</h3>
         <p class="location-city">{{ record.city }}</p>
+        {% if record.material_compatibility == 'selected_locations' %}
+        <p class="location-note" style="color:var(--primary-dark); background:var(--primary-tint);">Listed as a reference area for this material. Exact outlet address not yet available.</p>
+        {% elif record.material_compatibility == 'not_yet_verified' %}
+        <p class="location-note">Compatibility for this specific material at this area is not yet verified.</p>
+        {% else %}
         <p class="location-note">Exact outlet address not yet available &mdash; this is a static reference area.</p>
+        {% endif %}
     </div>
     {% endfor %}
 </div>

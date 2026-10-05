@@ -9,13 +9,23 @@
 <section class="section-dark">
     <div class="container">
         <p class="eyebrow">Drop-off finder</p>
-        <h1>Where can you recycle?</h1>
+        <h1>{% if selected_material %}Where can you recycle {{ selected_material.name }}?{% else %}Where can you recycle?{% endif %}</h1>
         <p class="hero-lede">Browse the areas we currently cover. These are reference areas, not verified outlet addresses yet — see below.</p>
     </div>
 </section>
 
 <section>
     <div class="container">
+        <div class="field" style="max-width:320px; margin-bottom:1.25rem;">
+            <label for="material-filter">Filter by material (optional)</label>
+            <select class="input" id="material-filter">
+                <option value="">All materials</option>
+                {% for m in all_materials %}
+                <option value="{{ m.id }}" {% if selected_material and selected_material.id == m.id %}selected{% endif %}>{{ m.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
         <div class="city-tabs" role="group" aria-label="Choose a city" id="city-tabs">
             {% for city_name in cities %}
             <button type="button" class="city-tab"

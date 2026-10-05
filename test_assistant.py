@@ -7,8 +7,8 @@ import json
 
 from t2c.assistant.assistant import get_assistant_response, _run_tool
 from t2c.assistant.schema import parse_intent, IntentParseError
-from t2c.rewards import calculate_reward, RATES
-from t2c.chatbot.chatbot import FALLBACK_RESPONSE
+from t2c.rewards import calculate_reward
+from t2c.materials import get_material
 
 
 class _FakeMessage:
@@ -65,7 +65,7 @@ def test_openai_reward_intent():
     client = FakeClient(intent_payload(intent="reward_estimate", material="aluminum", weight_kg=5))
     result = get_assistant_response("How much for 5kg of aluminum?", client=client)
     assert result["mode"] == "openai"
-    expected = calculate_reward("aluminum", 5)
+    expected = calculate_reward("aluminium_cans", 5)
     assert f"{expected:.2f}" in result["response"]
 
 
@@ -80,20 +80,31 @@ def test_openai_location_intent_no_fabricated_address():
 
 
 def test_openai_material_intent():
-    client = FakeClient(intent_payload(intent="material_info", material="plastic"))
-    result = get_assistant_response("Do you accept plastic?", client=client)
+    client = FakeClient(intent_payload(intent="material_info", material="pure water sachet"))
+    result = get_assistant_response("Do you accept pure water sachets?", client=client)
     assert result["mode"] == "openai"
-    lo, hi = RATES["Plastic (PET bottles)"]
-    assert f"{lo}" in result["response"] and f"{hi}" in result["response"]
+    rate = get_material("pure_water_sachets")["rate_per_kg"]
+    assert str(rate) in result["response"]
 
 
 def test_unsupported_material_is_rejected_cleanly():
-    client = FakeClient(intent_payload(intent="material_info", material="glass"))
+    client = FakeClient(intent_payload(intent="material_info", material="glass jars"))
     result = get_assistant_response("Do you accept glass?", client=client)
     assert result["mode"] == "openai"
-    assert "not currently listed" in result["response"] or "not currently" in result["response"]
+    assert "not confident" in result["response"].lower() or "not currently" in result["response"].lower()
     # never silently invents glass as an accepted material
-    assert "glass is accepted" not in result["response"].lower()
+    assert "glass jars is accepted" not in result["response"].lower()
+
+
+def test_ambiguous_category_word_asks_to_clarify_not_guesses():
+    """'nylon' alone names a category (3 materials), not one specific
+    material — the assistant should ask which one, not silently pick
+    pure water sachets (or any other) for the user."""
+    client = FakeClient(intent_payload(intent="reward_estimate", material="nylon", weight_kg=None))
+    result = get_assistant_response("How much for nylon?", client=client)
+    assert result["mode"] == "openai"
+    assert "pure water sachets" in result["response"].lower() or "sachets" in result["response"].lower()
+    assert "shopping" in result["response"].lower() or "carrier" in result["response"].lower()
 
 
 def test_invalid_structured_output_falls_back_locally():
@@ -119,10 +130,10 @@ def test_missing_key_falls_back_to_local(monkeypatch):
 
 
 def test_reward_values_come_from_shared_module_not_the_llm():
-    client = FakeClient(intent_payload(intent="reward_estimate", material="nylon", weight_kg=7))
-    result = get_assistant_response("I have 7 kilos of nylon", client=client)
-    tool_result = _run_tool(parse_intent(intent_payload(intent="reward_estimate", material="nylon", weight_kg=7)))
-    assert tool_result["data"]["reward"] == calculate_reward("nylon", 7)
+    client = FakeClient(intent_payload(intent="reward_estimate", material="sachet water nylon", weight_kg=7))
+    result = get_assistant_response("I have 7 kilos of sachet water nylon", client=client)
+    tool_result = _run_tool(parse_intent(intent_payload(intent="reward_estimate", material="sachet water nylon", weight_kg=7)))
+    assert tool_result["data"]["reward"] == calculate_reward("pure_water_sachets", 7)
     assert f"{tool_result['data']['reward']:.2f}" in result["response"]
 
 
@@ -141,14 +152,14 @@ def test_phrasing_cannot_inject_a_fabricated_number():
 
 def test_conversation_follow_up_reuses_last_material():
     session = {}
-    client = FakeClient(intent_payload(intent="reward_estimate", material="plastic", weight_kg=5))
-    first = get_assistant_response("How much for 5kg plastic?", session=session, client=client)
-    assert "Plastic" in first["response"]
+    client = FakeClient(intent_payload(intent="reward_estimate", material="pet bottle", weight_kg=5))
+    first = get_assistant_response("How much for 5kg of PET bottles?", session=session, client=client)
+    assert "PET Bottles" in first["response"]
 
     # Follow-up mentions only a new weight, no material.
     client2 = FakeClient(intent_payload(intent="reward_estimate", material=None, weight_kg=10))
     second = get_assistant_response("What about 10kg?", session=session, client=client2)
-    expected = calculate_reward("plastic", 10)
+    expected = calculate_reward("pet_bottles", 10)
     assert f"{expected:.2f}" in second["response"]
 
 

@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
   const tabs = document.getElementById("city-tabs");
   const results = document.getElementById("location-results");
+  const materialFilter = document.getElementById("material-filter");
   if (!tabs || !results) return;
 
   function pinIcon() {
@@ -16,6 +17,16 @@ document.addEventListener("DOMContentLoaded", function () {
     return div.innerHTML;
   }
 
+  function noteFor(record) {
+    if (record.material_compatibility === "selected_locations") {
+      return '<p class="location-note" style="color:var(--primary-dark); background:var(--primary-tint);">Listed as a reference area for this material. Exact outlet address not yet available.</p>';
+    }
+    if (record.material_compatibility === "not_yet_verified") {
+      return '<p class="location-note">Compatibility for this specific material at this area is not yet verified.</p>';
+    }
+    return '<p class="location-note">Exact outlet address not yet available — this is a static reference area.</p>';
+  }
+
   function renderRecords(records) {
     if (!records || records.length === 0) {
       results.innerHTML = '<div class="empty-state" id="location-grid"><p>We don\'t currently have any listed areas for that city.</p></div>';
@@ -25,23 +36,24 @@ document.addEventListener("DOMContentLoaded", function () {
       return '<div class="location-card">' +
         '<h3>' + pinIcon() + ' ' + escapeHtml(r.lga) + '</h3>' +
         '<p class="location-city">' + escapeHtml(r.city) + '</p>' +
-        '<p class="location-note">Exact outlet address not yet available — this is a static reference area.</p>' +
+        noteFor(r) +
         '</div>';
     }).join("");
     results.innerHTML = '<div class="location-grid" id="location-grid">' + cards + '</div>';
   }
 
-  tabs.addEventListener("click", function (event) {
-    const btn = event.target.closest(".city-tab");
-    if (!btn) return;
+  function currentCity() {
+    const pressed = tabs.querySelector('.city-tab[aria-pressed="true"]');
+    return pressed ? pressed.dataset.city : tabs.querySelector(".city-tab").dataset.city;
+  }
 
-    tabs.querySelectorAll(".city-tab").forEach(function (t) { t.setAttribute("aria-pressed", "false"); });
-    btn.setAttribute("aria-pressed", "true");
-
-    const city = btn.dataset.city;
+  function loadResults(city) {
     results.setAttribute("aria-busy", "true");
-
-    fetch("/api/locations?city=" + encodeURIComponent(city))
+    let url = "/api/locations?city=" + encodeURIComponent(city);
+    if (materialFilter && materialFilter.value) {
+      url += "&material=" + encodeURIComponent(materialFilter.value);
+    }
+    fetch(url)
       .then(function (res) { return res.json(); })
       .then(function (data) {
         renderRecords(data.records || []);
@@ -52,5 +64,20 @@ document.addEventListener("DOMContentLoaded", function () {
       .finally(function () {
         results.setAttribute("aria-busy", "false");
       });
+  }
+
+  tabs.addEventListener("click", function (event) {
+    const btn = event.target.closest(".city-tab");
+    if (!btn) return;
+
+    tabs.querySelectorAll(".city-tab").forEach(function (t) { t.setAttribute("aria-pressed", "false"); });
+    btn.setAttribute("aria-pressed", "true");
+    loadResults(btn.dataset.city);
   });
+
+  if (materialFilter) {
+    materialFilter.addEventListener("change", function () {
+      loadResults(currentCity());
+    });
+  }
 });

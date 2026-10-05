@@ -5,7 +5,7 @@ import os
 import nltk
 from nltk.stem import PorterStemmer
 
-from t2c.rewards import RATES
+from t2c.materials import list_materials
 
 nltk.download('punkt')
 
@@ -47,11 +47,14 @@ FALLBACK_RESPONSE = (
 
 
 def _payout_rates_response():
-    """Build the payout-rates reply from the real reward table (t2c.rewards)
-    instead of a hardcoded string, so this can never drift out of sync with
-    the reward calculator."""
-    parts = [f"{material}: ₦{lo}-₦{hi}/kg" for material, (lo, hi) in RATES.items()]
-    return "Our current rates are — " + "; ".join(parts) + "."
+    """Build the payout-rates reply from the canonical material catalogue
+    (t2c.materials) instead of a hardcoded string, so this can never drift
+    out of sync with the reward calculator. The local fallback bot still
+    only has 7 broad intents (no per-material intent), so it states the
+    full catalogue rather than identifying one specific material — Ask
+    T2C's OpenAI path handles material-specific questions."""
+    parts = [f"{m['name']}: ₦{m['rate_per_kg']}/kg" for m in list_materials()]
+    return "Our current reference rates are — " + "; ".join(parts) + "."
 
 
 def classify(user_input):

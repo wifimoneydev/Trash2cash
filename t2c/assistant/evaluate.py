@@ -22,7 +22,9 @@ from t2c.assistant.assistant import (
     _extract_intent, _resolve_with_session_fallback, _run_tool, _remember,
     PHRASING_SYSTEM_PROMPT, DEFAULT_MODEL, _contains_only_known_numbers,
 )
-from t2c.rewards import normalize_material, calculate_reward, get_rate_range, RATES
+from t2c.rewards import calculate_reward, get_rate_per_kg
+from t2c.materials import list_materials
+from t2c.alias_resolver import resolve_material_id
 
 BASE_DIR = os.path.dirname(__file__)
 EVAL_SET_PATH = os.path.join(BASE_DIR, "data", "eval_set.json")
@@ -60,11 +62,14 @@ def _phrase_with_diagnostics(client, message, fact):
 
 def _args_match(intent_data, case):
     """Argument extraction accuracy for one case (only meaningful when
-    tool selection was correct)."""
+    tool selection was correct). expected_material is a canonical
+    material id (e.g. "pet_bottles"), resolved the same way the live
+    tools resolve it — via the shared alias resolver, not a separate
+    comparison path."""
     ok = True
     expected_material = case.get("expected_material")
     if expected_material is not None:
-        got = normalize_material(intent_data.get("material")) if intent_data.get("material") else None
+        got = resolve_material_id(intent_data.get("material")) if intent_data.get("material") else None
         ok = ok and (got == expected_material)
     expected_weight = case.get("expected_weight_kg")
     if expected_weight is not None:
@@ -94,10 +99,10 @@ def _grounded_correctness(delivered_text, case):
                 expected_reward == 0 and "₦0" in delivered_text
             )
         if material:
-            lo, hi = get_rate_range(material)
-            return str(lo) in delivered_text and str(hi) in delivered_text
-        # general "what are the rates" — expect all three materials' numbers
-        return all(str(lo) in delivered_text and str(hi) in delivered_text for lo, hi in RATES.values())
+            rate = get_rate_per_kg(material)
+            return rate is not None and str(rate) in delivered_text
+        # general "what are the rates" — expect every catalogue material's rate
+        return all(str(m["rate_per_kg"]) in delivered_text for m in list_materials())
 
     if category == "material_unsupported":
         return any(p in text_lower for p in [
@@ -110,9 +115,9 @@ def _grounded_correctness(delivered_text, case):
     if category == "material_supported":
         material = case.get("expected_material")
         if material:
-            lo, hi = get_rate_range(material)
-            return str(lo) in delivered_text and str(hi) in delivered_text
-        return all(name.split(" (")[0].lower() in text_lower for name in RATES)
+            rate = get_rate_per_kg(material)
+            return rate is not None and str(rate) in delivered_text
+        return all(m["name"].lower() in text_lower for m in list_materials())
 
     if category == "location" or (category.startswith("followup") and case["expected_intent"] == "location_lookup"):
         loc = case.get("expected_location") or ""
@@ -130,8 +135,8 @@ def _grounded_correctness(delivered_text, case):
             expected_reward = calculate_reward(material, case["expected_weight_kg"])
             return f"{expected_reward:.2f}" in delivered_text
         if material:
-            lo, hi = get_rate_range(material)
-            return str(lo) in delivered_text and str(hi) in delivered_text
+            rate = get_rate_per_kg(material)
+            return rate is not None and str(rate) in delivered_text
         return True
 
     return True  # nigerian_english / spelling reuse the categories above via expected_intent

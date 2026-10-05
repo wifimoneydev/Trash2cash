@@ -472,11 +472,61 @@ textarea.input { resize: vertical; min-height: 120px; }
 .rate-table th { color: var(--muted); font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; }
 
 /* ==========================================================================
+   Materials
+   ========================================================================== */
+
+.material-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+.material-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.material-card h3 { margin-top: 0.2rem; }
+.material-card h3 a { text-decoration: none; color: inherit; }
+.material-card h3 a:hover { text-decoration: underline; }
+.material-examples { font-size: 0.9rem; color: var(--muted); }
+.material-rate {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.material-card-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.5rem; }
+
+.material-detail-head { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-bottom: 0.75rem; }
+.material-prep-list { margin-top: 0.5rem; padding-left: 1.2rem; }
+.material-prep-list li { margin-bottom: 0.35rem; color: var(--ink-soft); }
+.material-disclaimer {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  background: var(--paper-alt);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+}
+.material-not-sure {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+/* ==========================================================================
    Location finder
    ========================================================================== */
 
 .city-tabs { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.75rem; }
 .city-tab {
+  display: inline-flex;
+  align-items: center;
   min-height: 44px;
   padding: 0.6rem 1.1rem;
   border-radius: 999px;
@@ -484,9 +534,11 @@ textarea.input { resize: vertical; min-height: 120px; }
   background: var(--surface);
   font-weight: 700;
   font-size: 0.92rem;
+  text-decoration: none;
   cursor: pointer;
 }
-.city-tab[aria-pressed="true"] { background: var(--ink); color: var(--on-dark); border-color: var(--ink); }
+.city-tab[aria-pressed="true"],
+.city-tab[aria-current="page"] { background: var(--ink); color: var(--on-dark); border-color: var(--ink); }
 
 .location-grid {
   display: grid;
@@ -717,12 +769,20 @@ footer.site-footer {
    ========================================================================== */
 
 /* Nav collapses to a hamburger well before the links would crowd the
-   bar (6 links + logo + CTA need more room than a 768px/1024px tablet
+   bar (6+ links + logo + CTA need more room than a 768px/1024px tablet
    has — verified against the required breakpoint list, not guessed). */
 @media (max-width: 1080px) {
   .nav-links {
     position: fixed;
-    inset: 64px 0 0 0;
+    /* --navbar-height is measured in JS from the navbar's real rendered
+       height (main.js) — a prior hardcoded 64px here went stale the
+       moment the nav-toggle button grew to a 44px touch target, which
+       is exactly what caused the reported clipped/misaligned mobile
+       menu. The fallback below is only used before JS runs. */
+    top: var(--navbar-height, 74px);
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: var(--paper);
     flex-direction: column;
     align-items: flex-start;
@@ -733,8 +793,8 @@ footer.site-footer {
     opacity: 0;
     pointer-events: none;
     transition: transform 0.2s var(--ease), opacity 0.2s var(--ease);
-    max-height: calc(100vh - 64px);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .nav-links a { width: 100%; padding-block: 0.85rem; border-bottom: 1px solid var(--border); }
   .nav-links.is-open { transform: translateY(0); opacity: 1; pointer-events: auto; }

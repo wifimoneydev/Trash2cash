@@ -26,6 +26,7 @@
             <nav aria-label="Primary">
                 <ul class="nav-links" id="nav-links">
                     <li><a href="{{ url_for('home') }}#how-it-works">How It Works</a></li>
+                    <li><a href="{{ url_for('materials') }}" {% if request.endpoint in ('materials', 'material_detail') %}aria-current="page"{% endif %}>Materials</a></li>
                     <li><a href="{{ url_for('rewards') }}" {% if request.endpoint == 'rewards' %}aria-current="page"{% endif %}>Rewards</a></li>
                     <li><a href="{{ url_for('locations') }}" {% if request.endpoint == 'locations' %}aria-current="page"{% endif %}>Drop-off Finder</a></li>
                     <li><a href="{{ url_for('assistant') }}" {% if request.endpoint == 'assistant' %}aria-current="page"{% endif %}>Ask T2C</a></li>

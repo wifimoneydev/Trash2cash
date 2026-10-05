@@ -1,69 +1,52 @@
-"""Single source of truth for Trash2Cash material payout rates.
+"""V2 reward engine.
 
-These are the same values previously hardcoded in project.py. They are
-static, hand-set figures — not a live/real-time feed from any market
-data source.
+Computes an estimated reward for a specific catalogue material (by
+canonical material id) and a weight in kg. All rate data comes from
+t2c.materials — this module contains no hardcoded prices of its own,
+and nothing else in the codebase should either. The API, the
+calculator UI, Ask T2C, and the local chatbot fallback all call into
+this module (or t2c.materials directly) rather than keeping their own
+copy of a rate.
+
+V2 contract change from V1: V1's calculate_reward()/normalize_material()
+took a loose material string ("plastic", "nylon", "aluminum") and
+returned an averaged (min, max) range. V2 works against specific
+catalogue material ids (e.g. "pet_bottles") and a single rate_per_kg —
+see docs/T2C_V2_SPECIFICATION.md section 4 and
+docs/T2C_V2_IMPLEMENTATION.md for the full before/after.
 """
 
-RATES = {
-    "Plastic (PET bottles)": (80, 100),
-    "Nylon (Pure water sachets)": (70, 200),
-    "Aluminum (Cans)": (200, 500),
-}
+from t2c.materials import get_material
 
 
-def normalize_material(material):
-    """Map a user-supplied material string to its canonical RATES key.
-
-    Accepts the HTML form's short values ("plastic", "nylon", "aluminum"),
-    the full canonical names, in any case, with surrounding whitespace.
-    Returns None if the material isn't recognized — this is the single
-    place both the reward calculator and the chatbot rely on, so they
-    can never disagree about what counts as a valid material.
-    """
-    if not isinstance(material, str):
+def get_rate_per_kg(material_id):
+    """Return the reference rate (Naira/kg) for a material id, or None
+    if the material doesn't exist or doesn't currently have a rate."""
+    material = get_material(material_id)
+    if material is None:
         return None
-    material_lower = material.strip().lower()
-    if not material_lower:
-        return None
-    for key in RATES:
-        if material_lower in key.lower():
-            return key
-    # Natural phrasing often names the material and a form/descriptor that
-    # isn't a literal substring of the canonical key, e.g. "aluminum cans"
-    # or "nylon sachets" vs. "Aluminum (Cans)" / "Nylon (Pure water
-    # sachets)" — the parenthesis breaks a plain substring match even
-    # though the material is unambiguous. Fall back to matching on the
-    # material's head name (the word(s) before the parenthetical detail).
-    for key in RATES:
-        head = key.split(" (")[0].lower()
-        if head in material_lower or material_lower in head:
-            return key
-    return None
+    return material.get("rate_per_kg")
 
 
-def get_rate_range(material):
-    """Return the (min, max) rate range in Naira/kg for a given material,
-    or (0, 0) if the material isn't recognized."""
-    key = normalize_material(material)
-    return RATES.get(key, (0, 0))
+def calculate_reward(material_id, weight):
+    """Calculate the estimated reward for a catalogue material id and
+    a weight in kg.
 
-
-def calculate_reward(material, weight):
-    """Calculate reward based on material and weight.
-
-    Fails cleanly rather than raising: an unrecognized material, a
-    non-numeric weight, or a non-positive weight all yield a reward of
-    0 instead of an exception or a nonsensical negative reward.
+    Fails cleanly rather than raising: an unknown material id, a
+    material with no rate yet, a non-numeric weight, or a non-positive
+    weight all yield a reward of 0 instead of an exception or an
+    invented number.
     """
-    key = normalize_material(material)
-    if key is None:
+    rate = get_rate_per_kg(material_id)
+    if rate is None:
         return 0
+
     try:
         weight = float(weight)
     except (TypeError, ValueError):
         return 0
+
     if weight <= 0:
         return 0
-    min_rate, max_rate = RATES[key]
-    return (min_rate + max_rate) / 2 * weight
+
+    return rate * weight

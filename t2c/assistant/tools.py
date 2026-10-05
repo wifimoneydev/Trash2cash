@@ -1,24 +1,59 @@
 """Grounded business-logic tools for the assistant.
 
-Every fact returned here comes from t2c.rewards / t2c.locations — never
-from the LLM. Each tool returns {"ok": bool, "fact": str, "data": {...}}.
-`fact` is the exact, verified text the model is allowed to phrase
-naturally; `data` is the raw values, for tests/logging.
+Every fact returned here comes from t2c.materials / t2c.rewards /
+t2c.locations — never from the LLM. Each tool returns
+{"ok": bool, "fact": str, "data": {...}}. `fact` is the exact, verified
+text the model is allowed to phrase naturally; `data` is the raw
+values, for tests/logging.
+
+V2: material resolution goes through t2c.alias_resolver against the
+canonical t2c.materials catalogue (7 specific materials), replacing
+V1's 3-broad-bucket t2c.rewards.normalize_material(). A phrase that
+doesn't confidently resolve to one material — including one that only
+names a category ("any kind of nylon") or doesn't match anything at
+all ("Indomie wrappers") — never receives an invented rate.
 """
 
-from t2c.rewards import RATES, normalize_material, calculate_reward, get_rate_range
+from t2c.rewards import calculate_reward, get_rate_per_kg
+from t2c.materials import (
+    list_categories, list_materials, get_category, get_material, RATE_DISCLAIMER,
+)
+from t2c.alias_resolver import resolve_material_id, resolve_category_id
 from t2c.locations import LOCATIONS, find_records
 from t2c.chatbot.chatbot import tag_responses, FALLBACK_RESPONSE
 
-SUPPORTED_MATERIALS_TEXT = ", ".join(RATES.keys())
 SUPPORTED_LOCATIONS_TEXT = "; ".join(
     f"{city} ({', '.join(lgas)})" for city, lgas in LOCATIONS.items()
 )
 
 
+def _all_materials_text():
+    return ", ".join(m["name"] for m in list_materials())
+
+
 def _all_rates_fact():
-    parts = [f"{name}: ₦{lo}-₦{hi}/kg" for name, (lo, hi) in RATES.items()]
-    return "Current rates — " + "; ".join(parts) + "."
+    lines = []
+    for category in list_categories():
+        parts = [f"{m['name']}: ₦{m['rate_per_kg']}/kg" for m in list_materials(category["id"])]
+        lines.append(f"{category['name']} — " + "; ".join(parts))
+    return "Current reference rates by category: " + " | ".join(lines) + f". {RATE_DISCLAIMER}"
+
+
+def _category_materials_fact(category_id, original_text):
+    category = get_category(category_id)
+    names = [m["name"] for m in list_materials(category_id)]
+    return (
+        f"'{original_text}' could mean a few different things — "
+        f"{category['name']} covers: {', '.join(names)}. Which one do you have?"
+    )
+
+
+def _uncertain_material_fact(original_text):
+    return (
+        f"I'm not confident '{original_text}' matches a material we have "
+        f"verified data for. We currently cover: {_all_materials_text()}. "
+        f"You can check /materials or describe it a bit more."
+    )
 
 
 def reward_tool(material, weight_kg):
@@ -28,45 +63,50 @@ def reward_tool(material, weight_kg):
         return {
             "ok": True,
             "fact": _all_rates_fact(),
-            "data": {"material": None, "recognized": None},
+            "data": {"material_id": None, "recognized": None},
         }
 
-    key = normalize_material(material)
+    material_id = resolve_material_id(material)
 
-    if key is None:
+    if material_id is None:
+        category_id = resolve_category_id(material)
+        if category_id is not None:
+            return {
+                "ok": False,
+                "fact": _category_materials_fact(category_id, material),
+                "data": {"material_id": None, "recognized": False, "category_hint": category_id},
+            }
         return {
             "ok": False,
-            "fact": (
-                f"'{material}' isn't in our verified material list. "
-                f"We currently accept: {SUPPORTED_MATERIALS_TEXT}."
-            ),
-            "data": {"material": material, "recognized": False},
+            "fact": _uncertain_material_fact(material),
+            "data": {"material_id": None, "recognized": False},
         }
+
+    catalog_material = get_material(material_id)
+    name = catalog_material["name"]
+    rate = get_rate_per_kg(material_id)
 
     if weight_kg is None:
-        lo, hi = get_rate_range(key)
         return {
             "ok": False,
-            "fact": f"{key} pays ₦{lo}-₦{hi}/kg. How many kilograms do you have, so I can estimate your reward?",
-            "data": {"material": key, "recognized": True, "weight_kg": None, "rate_range": (lo, hi)},
+            "fact": f"{name} pays ₦{rate}/kg. How many kilograms do you have, so I can estimate your reward?",
+            "data": {"material_id": material_id, "recognized": True, "weight_kg": None, "rate_per_kg": rate},
         }
 
-    lo, hi = get_rate_range(key)
-    reward = calculate_reward(key, weight_kg)
+    reward = calculate_reward(material_id, weight_kg)
 
     if weight_kg <= 0:
-        fact = f"{key} pays ₦{lo}-₦{hi}/kg, but a weight of {weight_kg}kg earns ₦0 — there's no material to weigh."
+        fact = f"{name} pays ₦{rate}/kg, but a weight of {weight_kg}kg earns ₦0 — there's no material to weigh."
     else:
         fact = (
-            f"{key} pays ₦{lo}-₦{hi}/kg. For {weight_kg}kg, the estimated "
-            f"reward is ₦{reward:.2f}. This is an estimate from a fixed "
-            f"rate table, not a live market price."
+            f"{name} pays ₦{rate}/kg. For {weight_kg}kg, the estimated "
+            f"reward is ₦{reward:.2f}. {RATE_DISCLAIMER}"
         )
 
     return {
         "ok": True,
         "fact": fact,
-        "data": {"material": key, "weight_kg": weight_kg, "reward": reward, "rate_range": (lo, hi)},
+        "data": {"material_id": material_id, "weight_kg": weight_kg, "reward": reward, "rate_per_kg": rate},
     }
 
 
@@ -105,20 +145,33 @@ def location_tool(location):
 
 def material_info_tool(material):
     if not material:
-        fact = f"We currently accept: {SUPPORTED_MATERIALS_TEXT}."
-        return {"ok": True, "fact": fact, "data": {"material": None, "recognized": None}}
+        fact = f"We currently accept: {_all_materials_text()}."
+        return {"ok": True, "fact": fact, "data": {"material_id": None, "recognized": None}}
 
-    key = normalize_material(material)
-    if key is None:
-        fact = (
-            f"'{material}' is not currently listed in our verified material set. "
-            f"We currently accept: {SUPPORTED_MATERIALS_TEXT}."
-        )
-        return {"ok": False, "fact": fact, "data": {"material": material, "recognized": False}}
+    material_id = resolve_material_id(material)
+    if material_id is None:
+        category_id = resolve_category_id(material)
+        if category_id is not None:
+            return {
+                "ok": False,
+                "fact": _category_materials_fact(category_id, material),
+                "data": {"material_id": None, "recognized": False, "category_hint": category_id},
+            }
+        return {
+            "ok": False,
+            "fact": _uncertain_material_fact(material),
+            "data": {"material_id": None, "recognized": False},
+        }
 
-    lo, hi = get_rate_range(key)
-    fact = f"Yes — {key} is accepted, paying ₦{lo}-₦{hi}/kg."
-    return {"ok": True, "fact": fact, "data": {"material": key, "recognized": True, "rate_range": (lo, hi)}}
+    catalog_material = get_material(material_id)
+    rate = get_rate_per_kg(material_id)
+    prep = "; ".join(catalog_material.get("preparation", []))
+    fact = f"Yes — {catalog_material['name']} is accepted, paying ₦{rate}/kg. Preparation: {prep}."
+    return {
+        "ok": True,
+        "fact": fact,
+        "data": {"material_id": material_id, "recognized": True, "rate_per_kg": rate},
+    }
 
 
 def faq_tool():

@@ -1,5 +1,5 @@
 from t2c.chatbot.chatbot import get_bot_response, classify, FALLBACK_RESPONSE, CONFIDENCE_THRESHOLD
-from t2c.rewards import RATES
+from t2c.materials import list_materials
 
 
 def test_correct_intent_classification():
@@ -26,11 +26,11 @@ def test_ood_queries_do_not_get_a_confident_wrong_answer():
             assert confidence < 0.6
 
 
-def test_reward_intent_uses_shared_rate_table():
+def test_reward_intent_uses_shared_material_catalogue():
     response = get_bot_response("What are the rates?")
-    for material, (lo, hi) in RATES.items():
-        assert material in response
-        assert f"₦{lo}-₦{hi}/kg" in response
+    for material in list_materials():
+        assert material["name"] in response
+        assert f"₦{material['rate_per_kg']}/kg" in response
 
 
 def test_location_intent_responds():

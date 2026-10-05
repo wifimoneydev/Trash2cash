@@ -16,18 +16,40 @@
             <div class="hero-badges">
                 <span class="hero-badge">{{ icons.leaf(14) }} Lagos &amp; Abuja</span>
                 <span class="hero-badge">{{ icons.sparkle(14) }} AI-assisted answers</span>
-                <span class="hero-badge">{{ icons.recycle(14) }} 3 materials accepted</span>
+                <span class="hero-badge">{{ icons.recycle(14) }} 7 materials accepted</span>
             </div>
         </div>
 
-        <div class="hero-panel" aria-label="Current payout rates">
-            {% for material, rate in rates.items() %}
+        <div class="hero-panel" aria-label="Popular recyclables and their reference rates">
+            {% for material in popular_materials %}
             <div class="hero-panel-row">
-                <span class="material">{{ material }}</span>
-                <span class="rate">₦{{ rate[0] }}&ndash;₦{{ rate[1] }}/kg</span>
+                <span class="material">{{ material.name }}</span>
+                <span class="rate">₦{{ material.rate_per_kg }}/kg</span>
             </div>
             {% endfor %}
-            <p class="hero-panel-foot">Fixed reference rates, not a live market feed. <a href="{{ url_for('rewards') }}" style="color:inherit;">Estimate your reward &rarr;</a></p>
+            <p class="hero-panel-foot">Reference rates, not a live market feed. <a href="{{ url_for('rewards') }}" style="color:inherit;">Estimate your reward &rarr;</a></p>
+        </div>
+    </div>
+</section>
+
+<section class="section-alt" aria-labelledby="popular-heading">
+    <div class="container">
+        <div class="section-head" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:1rem; max-width:none;">
+            <div>
+                <p class="eyebrow">Popular recyclables</p>
+                <h2 id="popular-heading">What people bring us most</h2>
+            </div>
+            <a class="card-link" href="{{ url_for('materials') }}">View all materials {{ icons.arrow_right() }}</a>
+        </div>
+
+        <div class="material-grid">
+            {% for material in popular_materials %}
+            <article class="material-card">
+                <h3><a href="{{ url_for('material_detail', slug=material.slug) }}">{{ material.name }}</a></h3>
+                <p class="material-examples">{{ material.examples[0] }}</p>
+                <p class="material-rate">₦{{ material.rate_per_kg }}/kg</p>
+            </article>
+            {% endfor %}
         </div>
     </div>
 </section>
@@ -44,14 +66,15 @@
                 <span class="icon-badge accent">{{ icons.sparkle() }}</span>
                 <span class="badge badge-soon">Coming soon</span>
                 <h3>Identify Waste</h3>
-                <p>AI waste identification from a photo is in development (T2CVision) — not available yet.</p>
+                <p>AI waste identification from a photo is in development (T2CVision) — not available yet. For now, browse the Materials catalogue or ask T2C.</p>
+                <a class="card-link" href="{{ url_for('materials') }}">Browse materials {{ icons.arrow_right() }}</a>
             </div>
 
             <div class="feature-card">
                 <span class="icon-badge">{{ icons.calculator() }}</span>
                 <span class="badge badge-live">Available</span>
                 <h3>Calculate Reward</h3>
-                <p>Pick a material and weight to get an instant, honest estimate based on our fixed rate table.</p>
+                <p>Pick a category and specific material, enter weight, and get an instant, honest estimate.</p>
                 <a class="card-link" href="{{ url_for('rewards') }}">Open calculator {{ icons.arrow_right() }}</a>
             </div>
 
@@ -85,7 +108,7 @@
             <div class="step">
                 <span class="step-number">01</span>
                 <h3>Sort your waste</h3>
-                <p>Separate plastic bottles, pure water sachets, and aluminum cans from other trash.</p>
+                <p>Separate what you have — check the Materials catalogue if you're not sure it's accepted.</p>
             </div>
             <div class="step">
                 <span class="step-number">02</span>
