@@ -1,0 +1,8 @@
+# T2CVision (training + inference) — not required by, and not installed
+# for, the deployed web application. Install this separately only when
+# working on T2CVision itself:
+#
+#   pip install -r requirements.txt -r requirements-vision.txt
+tensorflow==2.20.0
+numpy==2.0.2
+matplotlib==3.9.4

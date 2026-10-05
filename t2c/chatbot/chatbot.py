@@ -7,7 +7,13 @@ from nltk.stem import PorterStemmer
 
 from t2c.materials import list_materials
 
-nltk.download('punkt')
+# word_tokenize() needs the "punkt_tab/english" resource. Bundled locally
+# (t2c/chatbot/nltk_data/) rather than fetched via nltk.download() so
+# application import never depends on a network call — see
+# docs/DEVELOPMENT_HISTORY.md for why.
+_BUNDLED_NLTK_DATA = os.path.join(os.path.dirname(__file__), "nltk_data")
+if _BUNDLED_NLTK_DATA not in nltk.data.path:
+    nltk.data.path.insert(0, _BUNDLED_NLTK_DATA)
 
 # === Preprocessing ===
 stemmer = PorterStemmer()
