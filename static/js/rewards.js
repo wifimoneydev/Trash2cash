@@ -13,6 +13,18 @@ document.addEventListener("DOMContentLoaded", function () {
     resultPanel.innerHTML = html;
     resultPanel.classList.add("is-visible");
     resultPanel.classList.toggle("is-error", !!isError);
+
+    // On a short mobile viewport the button can sit near the bottom of
+    // the screen, pushing the result below the fold. Bring it into
+    // view rather than leaving the user to hunt for it.
+    const rect = resultPanel.getBoundingClientRect();
+    const fullyVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
+    if (!fullyVisible) {
+      resultPanel.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "nearest",
+      });
+    }
   }
 
   function validate() {

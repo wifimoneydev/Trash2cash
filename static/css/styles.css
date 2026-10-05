@@ -197,10 +197,14 @@ select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
 
 .nav-toggle {
   display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
   background: none;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
-  padding: 0.45rem 0.6rem;
+  padding: 0;
   cursor: pointer;
 }
 .nav-toggle svg { width: 20px; height: 20px; }
@@ -473,6 +477,7 @@ textarea.input { resize: vertical; min-height: 120px; }
 
 .city-tabs { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.75rem; }
 .city-tab {
+  min-height: 44px;
   padding: 0.6rem 1.1rem;
   border-radius: 999px;
   border: 1.5px solid var(--border-strong);
@@ -518,6 +523,9 @@ textarea.input { resize: vertical; min-height: 120px; }
   display: grid;
   grid-template-rows: auto 1fr auto;
   height: min(680px, 72vh);
+  /* dvh accounts for mobile browser chrome (address bar, keyboard) —
+     vh above is the fallback for browsers that don't support it. */
+  height: min(680px, 72dvh);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface);
@@ -551,7 +559,7 @@ textarea.input { resize: vertical; min-height: 120px; }
 .chat-empty { margin: auto; text-align: center; max-width: 34ch; color: var(--muted); }
 .chat-empty svg { width: 40px; height: 40px; margin: 0 auto 0.75rem; color: var(--border-strong); }
 
-.msg { max-width: 78%; padding: 0.7rem 0.95rem; border-radius: var(--radius-md); font-size: 0.95rem; line-height: 1.5; }
+.msg { max-width: 78%; padding: 0.7rem 0.95rem; border-radius: var(--radius-md); font-size: 0.95rem; line-height: 1.5; overflow-wrap: break-word; }
 .msg-user { align-self: flex-end; background: var(--ink); color: var(--on-dark); border-bottom-right-radius: 4px; }
 .msg-assistant { align-self: flex-start; background: var(--paper-alt); border-bottom-left-radius: 4px; }
 .msg-error { align-self: flex-start; background: var(--danger-tint); color: var(--danger); }
@@ -570,6 +578,7 @@ textarea.input { resize: vertical; min-height: 120px; }
   padding: 0 1.25rem 1rem;
 }
 .suggestion-chip {
+  min-height: 44px;
   border: 1px solid var(--border-strong);
   background: var(--surface);
   border-radius: 999px;
@@ -642,6 +651,61 @@ footer.site-footer {
 .prose p + p { margin-top: 1rem; }
 .prose h2 { margin-top: 2.25rem; margin-bottom: 0.75rem; }
 
+.about-photo {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  margin-block: 2rem;
+  max-width: 420px;
+}
+.about-photo img { width: 100%; height: auto; display: block; }
+.about-photo figcaption {
+  padding: 0.85rem 1.1rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  background: var(--surface);
+}
+
+/* ==========================================================================
+   Photo feature (asymmetric image collage + text)
+   ========================================================================== */
+
+.photo-feature {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: center;
+}
+
+.photo-collage {
+  position: relative;
+  max-width: 340px;
+}
+.photo-collage-main {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.photo-collage-main img { width: 100%; height: auto; display: block; }
+.photo-collage-accent {
+  position: absolute;
+  bottom: -1.5rem;
+  right: -1.75rem;
+  width: 45%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 4px solid var(--paper);
+  box-shadow: var(--shadow-lg);
+}
+.photo-collage-accent img { width: 100%; height: auto; display: block; }
+
+.photo-feature-copy p { margin-top: 1rem; }
+.photo-feature-caption {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
 /* ==========================================================================
    Two-column layout helper
    ========================================================================== */
@@ -675,7 +739,15 @@ footer.site-footer {
   .nav-links a { width: 100%; padding-block: 0.85rem; border-bottom: 1px solid var(--border); }
   .nav-links.is-open { transform: translateY(0); opacity: 1; pointer-events: auto; }
   .nav-toggle { display: inline-flex; }
-  .nav-cta { display: none; }
+
+  /* The primary CTA doesn't just vanish on mobile — it moves into the
+     menu as its own full-width button instead of a plain text link. */
+  .nav-cta { width: 100%; margin: 0.75rem 0 0.25rem; }
+  .nav-links .nav-cta a.btn {
+    width: 100%;
+    border-bottom: none;
+    padding-block: 0.85rem;
+  }
 }
 
 @media (max-width: 1024px) {
@@ -685,8 +757,13 @@ footer.site-footer {
 
 @media (max-width: 860px) {
   .hero-inner { grid-template-columns: 1fr; }
-  .hero-panel { order: -1; }
+  /* Headline + CTA stay first on mobile (natural source order) — the
+     rate panel used to jump ahead of them via order:-1, which meant a
+     first-time mobile visitor saw a price table before learning what
+     Trash2Cash even is. */
   .split { grid-template-columns: 1fr; }
+  .photo-feature { grid-template-columns: 1fr; }
+  .photo-collage { max-width: 300px; margin-inline: auto; margin-bottom: 2.5rem; }
 }
 
 @media (max-width: 640px) {
@@ -701,6 +778,12 @@ footer.site-footer {
   .container { padding-inline: 1rem; }
   section { padding-block: 2.5rem; }
   .hero-actions .btn { width: 100%; }
-  .chat-shell { height: 78vh; border-radius: var(--radius-md); }
+  .chat-shell { height: 78vh; height: 78dvh; border-radius: var(--radius-md); }
   .footer-inner { flex-direction: column; align-items: flex-start; }
+
+  /* At the narrowest widths the collage's centered margin is smaller
+     than the accent image's negative offset, which would push it past
+     the container edge into horizontal-scroll territory. Pull it in. */
+  .photo-collage { max-width: 260px; }
+  .photo-collage-accent { right: -0.75rem; bottom: -1rem; }
 }

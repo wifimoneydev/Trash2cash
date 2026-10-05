@@ -106,6 +106,37 @@
     </div>
 </section>
 
+<section class="section-alt" aria-labelledby="reality-heading">
+    <div class="container photo-feature">
+        <div class="photo-collage">
+            <div class="photo-collage-main">
+                <img
+                    src="{{ url_for('static', filename='images/sweep-action-691.webp') }}"
+                    srcset="{{ url_for('static', filename='images/sweep-action-420.webp') }} 420w, {{ url_for('static', filename='images/sweep-action-691.webp') }} 691w"
+                    sizes="(max-width: 860px) 300px, 340px"
+                    width="691" height="1333"
+                    alt="A street sweeper clearing fallen leaves and dust from a roadside in Lagos, Nigeria."
+                    loading="lazy" decoding="async">
+            </div>
+            <div class="photo-collage-accent">
+                <img
+                    src="{{ url_for('static', filename='images/wheelbarrow-smile-420.webp') }}"
+                    srcset="{{ url_for('static', filename='images/wheelbarrow-smile-420.webp') }} 420w, {{ url_for('static', filename='images/wheelbarrow-smile-720.webp') }} 720w"
+                    sizes="180px"
+                    width="1228" height="2355"
+                    alt="A worker pushing a wheelbarrow of collected waste through a Lagos street."
+                    loading="lazy" decoding="async">
+            </div>
+        </div>
+        <div class="photo-feature-copy">
+            <p class="eyebrow">Real streets, real effort</p>
+            <h2 id="reality-heading">Recycling starts with real work</h2>
+            <p>Across Lagos and Abuja, keeping streets clean is hard, physical work, done every day by real people. Trash2Cash doesn't replace that effort — it adds an incentive on top of it: sort your own plastic, nylon, and aluminum, and get paid for what you bring in.</p>
+            <p class="photo-feature-caption">Street cleaning in progress, Lagos, Nigeria.</p>
+        </div>
+    </div>
+</section>
+
 <section aria-labelledby="cta-heading">
     <div class="container card" style="display:flex; flex-wrap:wrap; gap:1.5rem; align-items:center; justify-content:space-between;">
         <div>

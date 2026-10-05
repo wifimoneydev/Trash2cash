@@ -17,6 +17,17 @@
         <h2>The problem</h2>
         <p>Nigeria generates thousands of metric tons of waste every day, and only a small fraction of it is properly recycled. Plastic bottles, pure water sachets, and aluminum cans pile up in streets and drainage systems, contributing to flooding and pollution &mdash; not because people don't care, but because there's often no easy, worthwhile way to do something about it.</p>
 
+        <figure class="about-photo">
+            <img
+                src="{{ url_for('static', filename='images/wheelbarrow-collect-720.webp') }}"
+                srcset="{{ url_for('static', filename='images/wheelbarrow-collect-420.webp') }} 420w, {{ url_for('static', filename='images/wheelbarrow-collect-720.webp') }} 720w, {{ url_for('static', filename='images/wheelbarrow-collect-1000.webp') }} 1000w"
+                sizes="(max-width: 480px) 90vw, 420px"
+                width="1262" height="2355"
+                alt="A worker pushing a wheelbarrow loaded with collected waste through a Lagos neighborhood street."
+                loading="lazy" decoding="async">
+            <figcaption>Waste collection is already daily, physical work across Lagos and Abuja &mdash; Trash2Cash aims to make sorting and recycling part of that same effort worth more.</figcaption>
+        </figure>
+
         <h2>The idea</h2>
         <p>Trash2Cash gives recycling a direct financial incentive. Sort your plastic, nylon, or aluminum waste, estimate what it's worth using our rate table, and take it to a recycling area near you. No app-based payment or wallet exists yet &mdash; today, Trash2Cash helps you estimate value and find where to go, in plain language if you'd rather just ask.</p>
 

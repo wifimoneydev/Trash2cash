@@ -18,3 +18,6 @@ t2c/vision/model/
 *.dylib
 *.so
 *.egg-info/
+
+# Local design-reference tooling, not application code
+.claude/skills/ui-ux-pro-max/
