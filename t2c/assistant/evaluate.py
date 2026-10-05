@@ -110,6 +110,11 @@ def _grounded_correctness(delivered_text, case):
             "do not accept", "does not accept", "not accepted", "isn't in our",
             "not in our", "don't currently", "doesn't currently",
             "do not currently", "does not currently",
+            # V2's tools.py phrases genuine uncertainty this way (see
+            # t2c/assistant/tools.py _uncertain_material_fact) rather than
+            # a flat rejection — both count as "didn't invent acceptance."
+            "not sure", "not confident", "don't have verified data",
+            "do not have verified data", "no verified data",
         ])
 
     if category == "material_supported":
@@ -126,8 +131,12 @@ def _grounded_correctness(delivered_text, case):
     if category == "faq":
         return "trash2cash" in text_lower
 
-    if category in ("unsupported_feature", "out_of_domain"):
-        return True  # correctness here = tool selection; see main loop
+    if category in ("unsupported_feature", "out_of_domain", "ambiguous_category"):
+        # Correctness here is "did the right tool run" (checked in the
+        # main loop via tool_selected_correct) — for ambiguous_category
+        # specifically, the exact clarifying wording is covered more
+        # precisely by the mocked unit tests in test_assistant.py.
+        return True
 
     if category == "combined":
         material = case.get("expected_material")

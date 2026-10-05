@@ -31,12 +31,18 @@ Guidance:
 - Any question about pricing, payout, rates, or "how much" is
   "reward_estimate" — even a general "what are your rates?" with no
   specific material or weight (leave those fields null in that case).
-- A question about whether a specific material/waste type is accepted
-  (without asking for a price) is "material_info".
+  This includes indirect reward questions that don't literally say
+  "how much," like "I want to sell X" or "I have X I want to get rid
+  of for cash" — the user's intent is still a reward estimate.
+- A question about whether a specific material/waste type is accepted,
+  OR a general "what do you accept / what materials do you take"
+  question with no price implied, is "material_info" (leave material
+  null for the general case).
 - A question about where to drop off, collect, or find a location is
   "location_lookup".
-- A general "how does this work" / "what is Trash2Cash" question is
-  "general_help".
+- A general "how does this work" / "what is Trash2Cash" / "what is
+  this app" question (about the product/process itself, not about
+  which materials are accepted) is "general_help".
 - Anything unrelated to recycling, rewards, or Trash2Cash is "unsupported".
 """
 

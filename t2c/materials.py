@@ -111,6 +111,7 @@ MATERIALS = [
         "description": "Detergent bottles, bleach containers, plastic kegs/jerrycans, and selected household or personal-care containers.",
         "aliases": [
             "detergent bottle", "detergent bottles", "bleach bottle", "bleach bottles",
+            "bleach container", "bleach containers",
             "plastic keg", "plastic kegs", "jerrycan", "jerrycans", "jerry can", "jerry cans",
             "hdpe container", "hdpe containers", "hdpe bottle", "hdpe bottles", "hdpe",
         ],

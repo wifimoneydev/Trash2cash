@@ -733,6 +733,56 @@ Phase 3 + 10 new), still `pytest` from the repo root.
 
 ---
 
+## Trash2Cash V2 — Completed
+
+Full detail lives in three dedicated documents, kept separate from this running log rather than duplicated into it:
+
+- **`docs/T2C_V2_SPECIFICATION.md`** — the complete product/technical specification V2 was built against.
+- **`docs/MATERIAL_CATALOGUE_V2.md`** — per-material data provenance (what's reference, what's placeholder, what's assumed).
+- **`docs/T2C_V2_IMPLEMENTATION.md`** — architecture, exact API contract changes, file-by-file summary, and the real test/evaluation numbers.
+
+### V1 preservation
+
+V1 is tagged and recoverable independent of all V2 work: commit `1380fd4e869f27231137a3020c30e695f623b92f`, tag `t2c-v1-stable`, backup branch `backup/t2c-v1`. All V2 development happened on `feature/t2c-v2`, branched from that tag. `main`, `backup/t2c-v1`, and the tag were not touched during V2 work.
+
+### What changed, in one paragraph
+
+The three-bucket Plastic/Nylon/Aluminum model was replaced with a canonical 7-material catalogue (`t2c/materials.py`: 3 categories, each material carrying aliases, examples, a technical family kept as secondary/educational info, preparation guidance, and a labeled reference/placeholder rate). A new deterministic alias resolver (`t2c/alias_resolver.py`) powers Materials search and Ask T2C's material recognition, including real Nigerian phrasing ("pure water nylon," "jerrycan," "coke bottle") — and was itself debugged during testing to stop bare generic words like "nylon" from silently resolving to one specific material. A new `/materials` experience lets people browse or search what's accepted. The Reward Calculator became a dependent category→material flow. The Drop-off Finder gained an optional material filter that labels compatibility honestly from the catalogue's own data, never inventing it. Ask T2C now answers material questions from the same catalogue everything else uses, and handles both category-level ambiguity ("any kind of nylon") and genuinely unrecognized materials ("Indomie wrappers") without guessing a price. A real mobile-navigation clipping bug (reported from physical testing) was root-caused and fixed. The homepage rate section became a "Popular Recyclables" presentation. Existing photography, visual identity, and the OpenAI-grounded assistant architecture were all preserved, not replaced.
+
+### Test and evaluation results
+
+- **69/69 tests passing** (up from 51), full suite, no live network required.
+- **Live AI evaluation** (64 cases, real key, not mocked): 96.9% tool selection, 100% argument extraction, 96.9% grounded-answer accuracy, 1.6% raw hallucination rate. Two real bugs (a missing alias, an intent-routing ambiguity) were found and fixed from the first live run's honest results, not hidden.
+- **Local fallback chatbot**: 69.8% overall / 38.5% OOD recall — unchanged from pre-V2, confirming no regression.
+
+### Responsive validation — exactly what was checked
+
+No browser or device tool was available in this environment. Verification was structural: computed container widths, grid minmax behavior, and touch-target sizes by hand at 375/390/430/768/1024/1440px for every new V2 component (Materials grid, dependent dropdowns, location material filter, the expanded nav), the same method used for the Phase 4 redesign. The mobile nav fix specifically was root-caused (a stale hardcoded offset) rather than patched with another guessed number. **No physical-phone or real-browser testing was performed or is claimed here** — that remains the product owner's final validation step, per the phone test plan below.
+
+### Remaining risks / manual checks
+
+- Real-device confirmation of the mobile nav fix and the new Materials/Calculator flows (structural math only, not yet visually confirmed).
+- `material_supported`/`unsupported_feature` eval categories sit at 75–80%, not 100% — both remaining misses produced safe, non-fabricating responses with a defensible alternate intent reading, documented in `docs/T2C_V2_IMPLEMENTATION.md` rather than hidden.
+- All 7 materials' `supported_location_ids` are identically `["Lagos", "Abuja"]` today — the architecture supports per-material-per-location precision, but no data exists yet to narrow it further.
+
+### Phone test plan (for the product owner)
+
+1. Home: confirm the hero and the new "Popular Recyclables" section render, tap "View all materials."
+2. Materials: browse categories, search "sachet," open a material detail page, tap "Estimate Reward" and confirm it pre-fills the calculator.
+3. Rewards: pick a category, confirm the material list updates to match, enter a weight, confirm the result and disclaimer appear without needing to hunt for them.
+4. Drop-off Finder: filter by a material, switch cities, confirm the compatibility note reads honestly (not a fake "confirmed" claim).
+5. Ask T2C: ask about a specific material ("pure water sachets"), an ambiguous one ("nylon"), and an unsupported one ("glass").
+6. **Tap the hamburger menu specifically** — this is the bug that was reported from a real phone. Confirm it isn't clipped, all items are reachable, and it scrolls if needed.
+7. Rotate/resize if convenient; otherwise test at whatever your phone's actual width is.
+
+### Recommended next phase
+
+1. The real-device pass above.
+2. T2CVision: train and save a real model (still not done), then decide whether it becomes a genuine "Identify Waste" flow using the same alias-resolution pattern vision output would feed into.
+3. Persistence/accounts — still deliberately last.
+
+---
+
 ## Original Audit (Pre-Cleanup Baseline)
 
 *The sections below describe the repository as it existed before Phase 1. Kept for historical reference — several findings here (the nested duplication, committed venv, chatbot/reward contradiction, broken contact form, vision rescaling bug, duplicate chat widget) have since been fixed, as documented above.*
