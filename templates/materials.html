@@ -36,7 +36,7 @@
                 <h3><a href="{{ url_for('material_detail', slug=material.slug) }}">{{ material.name }}</a></h3>
                 <p class="material-examples">{{ material.examples | join(', ') }}</p>
                 <p class="material-rate">₦{{ material.rate_per_kg }}/kg
-                    <span class="badge {{ 'badge-live' if material.rate_status == 'reference' else 'badge-soon' }}">{{ material.rate_status }}</span>
+                    <span class="badge {{ 'badge-live' if material.rate_status == 'reference' else 'badge-soon' }}">{{ material.rate_status | rate_status_label }}</span>
                 </p>
                 <div class="material-card-actions">
                     <a class="btn btn-outline btn-sm" href="{{ url_for('material_detail', slug=material.slug) }}">Details</a>

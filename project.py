@@ -17,6 +17,20 @@ app.secret_key = "dev"  # only needed for flash(); not a real secret, not for pr
 # yet; a reasonable editorial starting set.
 POPULAR_MATERIAL_IDS = ["pet_bottles", "pure_water_sachets", "aluminium_cans"]
 
+# Presentation-only wording for rate_status — the canonical values stay
+# "reference"/"placeholder" in t2c/materials.py; this just avoids showing
+# internal data-management terminology ("placeholder") to users. One
+# place so Materials and material-detail pages can't drift apart.
+RATE_STATUS_LABELS = {
+    "reference": "Reference Rate",
+    "placeholder": "Estimated Rate",
+}
+
+
+@app.template_filter("rate_status_label")
+def rate_status_label(status):
+    return RATE_STATUS_LABELS.get(status, status)
+
 
 @app.route("/")
 def home():
